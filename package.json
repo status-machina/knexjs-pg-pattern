@@ -1,0 +1,40 @@
+{
+  "name": "@status-machina/knexjs-pg-pattern",
+  "version": "0.0.1",
+  "description": "Event sourcing pattern for PostgreSQL in KnexJS",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "test": "npm run build && npm run test:setup && vitest --run && npm run test:teardown",
+    "test:watch": "npm run build && npm run test:setup && vitest",
+    "test:setup": "docker compose up -d && npm run wait-for-db && npm run migrate",
+    "test:teardown": "docker compose down",
+    "migrate": "knex migrate:latest --knexfile knexfile.ts",
+    "wait-for-db": "node scripts/wait-for-db.js"
+  },
+  "keywords": [
+    "knex",
+    "postgresql",
+    "event sourcing"
+  ],
+    "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "author": "Status Machina",
+  "license": "MIT",
+  "devDependencies": {
+    "@testcontainers/postgresql": "^10.18.0",
+    "@types/node": "^22.13.2",
+    "dotenv": "^16.4.7",
+    "tsup": "^8.3.6",
+    "typescript": "^5.7.1",
+    "vitest": "^3.0.5"
+  },
+  "peerDependencies": {
+    "knex": "^3.1.0",
+    "pg": "^8.13.3"
+  }
+}

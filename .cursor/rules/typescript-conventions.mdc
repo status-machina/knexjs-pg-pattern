@@ -1,0 +1,27 @@
+---
+description: creating any typescript code
+globs: *.ts, *.tsx
+---
+
+# TypeScript Conventions for this Project
+
+- All functions must be well named based on either their output or their action
+- ALWAYS use a named function instead of an inline callback, especially when being used in iteration methods like `map`, `reduce`, etc.
+    - Example: `["cat", "dog"].map(toCapitalized) // ["Cat", "Dog"]`
+- Prefer to keep function length below 60 LOC
+- Prefer to keep file length below 250 LOC
+- Except where specifically requested, prefer a functional style of programming
+- Prefer to create separate types for arguments for functions, just above each function declaration
+  - Example: 
+    ```ts
+    type MyFuncArgs = { a: string; b: number; };
+    const myFunc = (args: MyFuncArgs) => {};
+
+    type OtherFuncArgs = { c: number; d: boolean; };
+    const otherFunc = ({ c, d }: OtherFuncArgs) => {};
+    ```
+  - Type declarations do not count agains LOC
+- Avoid nesting conditionals and prefer to keep cyclomatic complexity low
+- Write code in a way that its usage is self explanatory
+    - Example: `eventClient.saveEvent(eventInput);`
+

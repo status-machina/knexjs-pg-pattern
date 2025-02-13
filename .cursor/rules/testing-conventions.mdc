@@ -1,0 +1,22 @@
+---
+description: Writing tests
+globs: *.test.ts, *.test.tsx, test/**/*.ts
+---
+
+# Test Conventions
+
+**Framework:** Vitest
+
+Test will either focus on:
+- functionality
+    - typical for testing individual methods outputs
+- behavior
+    - for testing larger output
+    - SHOULD clearly annotate actions taken and test expected state/outcomes after each outcome
+
+Absolutes:
+- Tests SHALL be written in a way that they can run in parallel
+    - Setup for each test MUST NOT be dependent on actions in another test
+    - The output of each test MUST NOT be influence by the actions of other tests
+    - Shared setup should be handled by reusable utility functions that can be called at the beginning of each test
+- Tests SHALL use the compiled code from the `dist` folder and SHALL NOT use the code from the `src` folder
