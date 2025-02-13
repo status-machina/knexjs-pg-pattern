@@ -1,3 +1,4 @@
+// These migrations are only used for testing
 import type { Knex } from "knex";
 import { createEventsTableMigration, createProjectionsTableMigration } from "../dist";
 

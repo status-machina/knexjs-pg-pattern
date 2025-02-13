@@ -1,3 +1,5 @@
+
+// These migrations are only used for testing
 import type { Knex } from "knex";
 import { createEventDataIndexMigration, createProjectionDataIndexMigration } from "../dist";
 
