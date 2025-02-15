@@ -16,7 +16,9 @@ export type EventClient<
   getLatestEvent: <T extends z.infer<TEventUnion>['type']>(
     params: GetLatestEventParams<T>
   ) => Promise<Extract<z.infer<TEventUnion>, { type: T }> | null>;
-  getEventStream: (params: GetEventStreamParams) => Promise<z.infer<TEventUnion>[]>;
+  getEventStream: <T extends z.infer<TEventUnion>['type']>(
+    params: GetEventStreamParams<T>
+  ) => Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>>;
   getEventStreams: (params: GetEventStreamsParams) => Promise<Record<string, z.infer<TEventUnion>[]>>;
   saveProjection: (params: SaveProjectionParams) => Promise<void>;
   forceUpdateProjection: (params: UpdateProjectionParams) => Promise<void>;
@@ -45,15 +47,15 @@ type GetLatestEventParams<T extends string = string> = {
   filter?: DataFilter;
 }
 
-type GetEventStreamParams = {
-  types: string[];
-  filter?: Record<string, unknown>;
+type GetEventStreamParams<T extends string = string> = {
+  types: T[];
+  filter?: DataFilter;
 }
 
 type GetEventStreamsParams = {
   streams: Array<{
     types: string[];
-    filter?: Record<string, unknown>;
+    filter?: DataFilter;
   }>;
 }
 
@@ -86,8 +88,51 @@ type QueryProjectionsParams = {
 
 type SaveEventWithValidationParams<TEvent> = {
   event: TEvent;
-  streams: GetEventStreamParams[];
+  streams: GetEventStreamParams<string>[];
 }
+
+const applyDataFilters = (query: Knex.QueryBuilder, filter?: DataFilter) => {
+  if (!filter) return query;
+
+  for (const [field, operators] of Object.entries(filter)) {
+    for (const [op, value] of Object.entries(operators)) {
+      const sqlOperator = operatorMap[op as keyof QueryOperators<any>];
+      
+      if (!sqlOperator) {
+        throw new Error(`Unknown operator: ${op}`);
+      }
+
+      if (Array.isArray(value)) {
+        // Handle IN and NOT IN
+        if (op === 'nin') {
+          query = query.whereRaw(`data->>'${field}' != ALL(?)`, [value]);
+        } else {
+          query = query.whereRaw(`data->>'${field}' = ANY(?)`, [value]);
+        }
+      } else if (typeof value === 'number') {
+        // Cast to numeric for number comparisons
+        query = query.whereRaw(
+          `CAST(data->>'${field}' AS numeric) ${sqlOperator} ?`,
+          value
+        );
+      } else if (typeof value === 'boolean') {
+        // Handle boolean values
+        query = query.whereRaw(
+          `CAST(data->>'${field}' AS boolean) ${sqlOperator} ?`,
+          value
+        );
+      } else {
+        // String comparison (default)
+        query = query.whereRaw(
+          `data->>'${field}' ${sqlOperator} ?`,
+          value
+        );
+      }
+    }
+  }
+
+  return query;
+};
 
 export const createEventClient = <
   TEventUnion extends z.ZodType,
@@ -139,51 +184,22 @@ export const createEventClient = <
       let query = knex('events')
         .where('type', params.type);
 
-      if (params.filter) {
-        for (const [field, operators] of Object.entries(params.filter)) {
-          for (const [op, value] of Object.entries(operators)) {
-            const sqlOperator = operatorMap[op as keyof QueryOperators<any>];
-            
-            if (!sqlOperator) {
-              throw new Error(`Unknown operator: ${op}`);
-            }
-
-            if (Array.isArray(value)) {
-              // Handle IN and NOT IN
-              query = query.whereRaw(`data->>'${field}' = ANY(?)`, [value]);
-            } else if (typeof value === 'number') {
-              // Cast to numeric for number comparisons
-              query = query.whereRaw(
-                `CAST(data->>'${field}' AS numeric) ${sqlOperator} ?`,
-                value
-              );
-            } else if (typeof value === 'boolean') {
-              // Handle boolean values
-              query = query.whereRaw(
-                `CAST(data->>'${field}' AS boolean) ${sqlOperator} ?`,
-                value
-              );
-            } else {
-              // String comparison (default)
-              query = query.whereRaw(
-                `data->>'${field}' ${sqlOperator} ?`,
-                value
-              );
-            }
-          }
-        }
-      }
-
-      query = query.orderBy('id', 'desc')
-        .limit(1);
+      query = applyDataFilters(query, params.filter);
+      query = query.orderBy('id', 'desc').limit(1);
 
       const [event] = await query.select('*');
       return event ? eventUnion.parse(event) : null;
     },
 
     getEventStream: async (params) => {
-      // Get chronological stream of events
-      return [];
+      let query = knex('events')
+        .whereIn('type', params.types);
+
+      query = applyDataFilters(query, params.filter);
+      query = query.orderBy('id', 'asc');
+
+      const events = await query.select('*');
+      return events.map(event => eventUnion.parse(event));
     },
 
     getEventStreams: async (params) => {
