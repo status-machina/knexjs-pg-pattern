@@ -406,4 +406,83 @@ describe('EventClient', () => {
       expect(events[1].type).toBe(eventTypes.ITEM_COMPLETION_SET);
     });
   });
+
+  describe('getEventStreams', () => {
+    it('should retrieve events from multiple streams in chronological order', async () => {
+      const client = createEventClient(eventUnion, eventInputUnion, knex);
+
+      await client.saveEvents([
+        {
+          type: eventTypes.LIST_CREATED,
+          data: { listId: '123', name: 'List 1' }
+        },
+        {
+          type: eventTypes.ITEM_PRIORITY_SET,
+          data: { listId: '123', itemId: 'item1', priority: 5 }
+        },
+        {
+          type: eventTypes.ITEM_COMPLETION_SET,
+          data: { listId: '123', itemId: 'item1', completed: true }
+        },
+        {
+          type: eventTypes.LIST_CREATED,
+          data: { listId: '456', name: 'List 2' }
+        }
+      ]);
+
+      const events = await client.getEventStreams<typeof eventTypes.LIST_CREATED | typeof eventTypes.ITEM_PRIORITY_SET | typeof eventTypes.ITEM_COMPLETION_SET>({
+        streams: [
+          {
+            types: [eventTypes.LIST_CREATED],
+            filter: { name: { eq: 'List 1' } }
+          },
+          {
+            types: [eventTypes.ITEM_PRIORITY_SET, eventTypes.ITEM_COMPLETION_SET],
+            filter: { listId: { eq: '123' } }
+          }
+        ]
+      });
+
+      expect(events).toHaveLength(3);
+      expect(events[0].type).toBe(eventTypes.LIST_CREATED);
+      expect((events[0] as { data: { name: string } }).data.name).toBe('List 1');
+      expect(events[1].type).toBe(eventTypes.ITEM_PRIORITY_SET);
+      expect(events[2].type).toBe(eventTypes.ITEM_COMPLETION_SET);
+    });
+
+    it('should not return duplicate events when matched by multiple streams', async () => {
+      const client = createEventClient(eventUnion, eventInputUnion, knex);
+
+      await client.saveEvents([
+        {
+          type: eventTypes.ITEM_PRIORITY_SET,
+          data: { listId: '123', itemId: 'item1', priority: 5 }
+        },
+        {
+          type: eventTypes.ITEM_COMPLETION_SET,
+          data: { listId: '123', itemId: 'item1', completed: true }
+        }
+      ]);
+
+      const events = await client.getEventStreams<typeof eventTypes.ITEM_PRIORITY_SET | typeof eventTypes.ITEM_COMPLETION_SET>({
+        streams: [
+          {
+            types: [eventTypes.ITEM_PRIORITY_SET, eventTypes.ITEM_COMPLETION_SET],
+            filter: { listId: { eq: '123' } }
+          },
+          {
+            types: [eventTypes.ITEM_PRIORITY_SET],
+            filter: { priority: { eq: 5 } }
+          }
+        ]
+      });
+
+      expect(events).toHaveLength(2);
+      const eventIds = events.map(e => e.id);
+      const uniqueEventIds = [...new Set(eventIds)];
+      expect(eventIds).toEqual(uniqueEventIds);
+      expect(events[0].type).toBe(eventTypes.ITEM_PRIORITY_SET);
+      expect(events[1].type).toBe(eventTypes.ITEM_COMPLETION_SET);
+    });
+  });
 }); 

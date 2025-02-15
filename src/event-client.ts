@@ -19,7 +19,9 @@ export type EventClient<
   getEventStream: <T extends z.infer<TEventUnion>['type']>(
     params: GetEventStreamParams<T>
   ) => Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>>;
-  getEventStreams: (params: GetEventStreamsParams) => Promise<Record<string, z.infer<TEventUnion>[]>>;
+  getEventStreams: <T extends z.infer<TEventUnion>['type']>(
+    params: { streams: Array<{ types: T[]; filter?: DataFilter; }> }
+  ) => Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>>;
   saveProjection: (params: SaveProjectionParams) => Promise<void>;
   forceUpdateProjection: (params: UpdateProjectionParams) => Promise<void>;
   conditionalUpdateProjection: (params: ConditionalUpdateProjectionParams) => Promise<void>;
@@ -50,13 +52,6 @@ type GetLatestEventParams<T extends string = string> = {
 type GetEventStreamParams<T extends string = string> = {
   types: T[];
   filter?: DataFilter;
-}
-
-type GetEventStreamsParams = {
-  streams: Array<{
-    types: string[];
-    filter?: DataFilter;
-  }>;
 }
 
 type SaveProjectionParams = {
@@ -202,9 +197,25 @@ export const createEventClient = <
       return events.map(event => eventUnion.parse(event));
     },
 
-    getEventStreams: async (params) => {
-      // Get multiple event streams simultaneously
-      return {};
+    getEventStreams: async <T extends z.infer<TEventUnion>['type']>(params: { streams: Array<{ types: T[]; filter?: DataFilter; }> }): Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>> => {
+      let query = knex('events')
+        .distinctOn('id');
+      
+      // Build OR conditions for each stream
+      query = query.where((builder) => {
+        params.streams.forEach((stream, index) => {
+          builder.orWhere((subBuilder) => {
+            subBuilder.whereIn('type', stream.types);
+            applyDataFilters(subBuilder, stream.filter);
+          });
+        });
+      });
+
+      // Order by id to maintain chronological order
+      query = query.orderBy('id', 'asc');
+
+      const events = await query.select('*');
+      return events.map(event => eventUnion.parse(event));
     },
 
     saveProjection: async (params) => {
