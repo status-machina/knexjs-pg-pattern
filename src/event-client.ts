@@ -27,7 +27,9 @@ export type EventClient<
   conditionalUpdateProjection: (params: ConditionalUpdateProjectionParams) => Promise<void>;
   getProjection: (params: GetProjectionParams) => Promise<TProjection | null>;
   queryProjections: (params: QueryProjectionsParams) => Promise<TProjection[]>;
-  saveEventWithStreamValidation: (params: SaveEventWithValidationParams<z.infer<TEventUnion>>) => Promise<void>;
+  saveEventWithStreamValidation: <T extends z.infer<TEventUnion>['type']>(
+    params: SaveEventWithValidationParams<EventInput<Extract<z.infer<TEventUnion>, { type: T }>>>
+  ) => Promise<Extract<z.infer<TEventUnion>, { type: T }>>;
 }
 
 export type Event<EType extends string, EData extends unknown> = {
@@ -83,7 +85,11 @@ type QueryProjectionsParams = {
 
 type SaveEventWithValidationParams<TEvent> = {
   event: TEvent;
-  streams: GetEventStreamParams<string>[];
+  latestEventId: bigint;
+  streams: Array<{
+    types: string[];
+    filter?: DataFilter;
+  }>;
 }
 
 const applyDataFilters = (query: Knex.QueryBuilder, filter?: DataFilter) => {
@@ -240,8 +246,43 @@ export const createEventClient = <
       return [];
     },
 
-    saveEventWithStreamValidation: async (params) => {
-      // Save event with concurrency check against specified streams
+    saveEventWithStreamValidation: async <T extends z.infer<TEventUnion>['type']>(
+      params: SaveEventWithValidationParams<EventInput<Extract<z.infer<TEventUnion>, { type: T }>>>
+    ): Promise<Extract<z.infer<TEventUnion>, { type: T }>> => {
+      // Validate the input
+      const validatedInput = inputUnion.parse(params.event);
+      
+      // Define the CTE using Knex query builder
+      const newerEventsQuery = knex
+        .select('id')
+        .from('events')
+        .where('id', '>', params.latestEventId.toString())
+        .where((builder) => {
+          params.streams.forEach((stream) => {
+            builder.orWhere((subBuilder) => {
+              subBuilder.whereIn('type', stream.types);
+              applyDataFilters(subBuilder, stream.filter);
+            });
+          });
+        })
+        .limit(1);
+
+      const sql = `
+        WITH newer_events AS (${newerEventsQuery.toString()})
+        INSERT INTO events (type, data)
+        SELECT ?, ?::jsonb
+        WHERE NOT EXISTS (SELECT 1 FROM newer_events)
+        RETURNING id, type, data, created_at, updated_at;
+      `;
+
+      // Use raw for the insert with CTE
+      const result = await knex.raw(sql, [validatedInput.type, validatedInput.data]);
+
+      if (!result?.rows?.[0]) {
+        throw new Error('Concurrent modification detected');
+      }
+
+      return eventUnion.parse(result.rows[0]);
     }
   };
 };

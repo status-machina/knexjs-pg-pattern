@@ -485,4 +485,77 @@ describe('EventClient', () => {
       expect(events[1].type).toBe(eventTypes.ITEM_COMPLETION_SET);
     });
   });
+
+  describe('saveEventWithStreamValidation', () => {
+    it('should save event when no newer events exist', async () => {
+      const client = createEventClient(eventUnion, eventInputUnion, knex);
+
+      const [event1] = await client.saveEvents([
+        {
+          type: eventTypes.LIST_CREATED,
+          data: { listId: '123', name: 'List 1' }
+        }
+      ]);
+
+      await client.saveEventWithStreamValidation({
+        event: {
+          type: eventTypes.ITEM_PRIORITY_SET,
+          data: { listId: '123', itemId: 'item1', priority: 5 }
+        },
+        latestEventId: event1.id,
+        streams: [
+          {
+            types: [eventTypes.LIST_CREATED, eventTypes.ITEM_PRIORITY_SET],
+            filter: { listId: { eq: '123' } }
+          }
+        ]
+      });
+
+      // Verify the event was saved
+      const events = await client.getEventStream({
+        types: [eventTypes.ITEM_PRIORITY_SET]
+      });
+      expect(events).toHaveLength(1);
+      expect(events[0].data.priority).toBe(5);
+    });
+
+    it('should reject save when newer events exist', async () => {
+      const client = createEventClient(eventUnion, eventInputUnion, knex);
+
+      const [event1] = await client.saveEvents([
+        {
+          type: eventTypes.LIST_CREATED,
+          data: { listId: '123', name: 'List 1' }
+        }
+      ]);
+
+      // Add a newer event
+      await client.saveEvent({
+        type: eventTypes.ITEM_PRIORITY_SET,
+        data: { listId: '123', itemId: 'item1', priority: 10 }
+      });
+
+      // Try to save with old event id
+      await expect(client.saveEventWithStreamValidation({
+        event: {
+          type: eventTypes.ITEM_PRIORITY_SET,
+          data: { listId: '123', itemId: 'item1', priority: 5 }
+        },
+        latestEventId: event1.id,
+        streams: [
+          {
+            types: [eventTypes.LIST_CREATED, eventTypes.ITEM_PRIORITY_SET],
+            filter: { listId: { eq: '123' } }
+          }
+        ]
+      })).rejects.toThrow('Concurrent modification detected');
+
+      // Verify only the original events exist
+      const events = await client.getEventStream({
+        types: [eventTypes.ITEM_PRIORITY_SET]
+      });
+      expect(events).toHaveLength(1);
+      expect(events[0].data.priority).toBe(10);
+    });
+  });
 }); 
