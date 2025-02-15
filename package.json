@@ -6,11 +6,12 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsup",
-    "test": "npm run build && npm run test:setup && vitest --run && npm run test:teardown",
-    "test:watch": "npm run build && npm run test:setup && vitest",
+    "test": "npm run build && npm run test:setup && vitest --run; EXIT_CODE=$?; npm run test:teardown; exit $EXIT_CODE",
+    "test:watch": "npm run build && npm run test:setup && vitest; npm run test:teardown",
     "test:setup": "docker compose up -d && npm run wait-for-db && npm run migrate",
     "test:teardown": "docker compose down",
     "migrate": "knex migrate:latest --knexfile knexfile.ts",
+    "typecheck": "npm run build && tsc --noEmit",
     "wait-for-db": "node scripts/wait-for-db.js"
   },
   "keywords": [
@@ -35,6 +36,7 @@
   },
   "peerDependencies": {
     "knex": "^3.1.0",
-    "pg": "^8.13.3"
+    "pg": "^8.13.3",
+    "zod": "^3.24.2"
   }
 }

@@ -5,24 +5,30 @@ type Migration = {
 
 export const createEventsTableMigration: Migration = {
   up: `
+    CREATE SEQUENCE IF NOT EXISTS event_id_seq;
+
     CREATE TABLE IF NOT EXISTS events (
-      id TEXT PRIMARY KEY,
+      id BIGINT PRIMARY KEY DEFAULT nextval('event_id_seq'),
       type TEXT NOT NULL,
       data JSONB NOT NULL,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
+
     CREATE INDEX IF NOT EXISTS events_type_idx ON events(type);
     CREATE INDEX IF NOT EXISTS events_created_at_idx ON events(created_at);
   `,
-  down: `DROP TABLE IF EXISTS events;`
+  down: `
+    DROP TABLE IF EXISTS events;
+    DROP SEQUENCE IF EXISTS event_id_seq;
+  `
 };
 
 export const createProjectionsTableMigration: Migration = {
   up: `
     CREATE TABLE IF NOT EXISTS projections (
       id TEXT PRIMARY KEY,
-      latest_event_id TEXT NOT NULL,
+      latest_event_id BIGINT NOT NULL,
       type TEXT NOT NULL,
       data JSONB NOT NULL,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

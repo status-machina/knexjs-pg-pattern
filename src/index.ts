@@ -7,4 +7,4 @@ export {
   createProjectionsTableMigration,
   createEventDataIndexMigration,
   createProjectionDataIndexMigration
-} from './event-base';
+} from './migration-functions';

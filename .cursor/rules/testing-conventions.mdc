@@ -1,11 +1,11 @@
 ---
-description: Writing tests
+description: Writing tests, testing, creating new test files
 globs: *.test.ts, *.test.tsx, test/**/*.ts
 ---
 
 # Test Conventions
 
-**Framework:** Vitest
+All tests use `vitest` and need to import the appropriate methods (`describe`, `it`, etc) in each test file.
 
 Test will either focus on:
 - functionality

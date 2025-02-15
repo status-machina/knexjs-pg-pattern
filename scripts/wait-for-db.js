@@ -1,14 +1,16 @@
 const { Client } = require('pg');
-const client = new Client({
-  host: 'localhost',
-  port: 5432,
-  user: 'test_user',
-  password: 'test_password',
-  database: 'test_db'
-});
+const { setTimeout } = require('timers/promises');
 
 async function waitForDb(retries = 30, interval = 1000) {
   for (let i = 0; i < retries; i++) {
+    const client = new Client({
+      host: 'localhost',
+      port: 5432,
+      user: 'test_user',
+      password: 'test_password',
+      database: 'test_db'
+    });
+    
     try {
       await client.connect();
       await client.query('SELECT 1');
@@ -16,8 +18,9 @@ async function waitForDb(retries = 30, interval = 1000) {
       console.log('Database is ready!');
       return;
     } catch (err) {
+      await client.end().catch(() => {}); // Cleanup even if there's an error
       console.log(`Waiting for database... (${i + 1}/${retries})`);
-      await new Promise(resolve => setTimeout(resolve, interval));
+      await setTimeout(interval);
     }
   }
   
