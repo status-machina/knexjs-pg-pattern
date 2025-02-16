@@ -6,8 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsup",
-    "test": "npm run build && npm run test:setup && vitest --run; EXIT_CODE=$?; npm run test:teardown; exit $EXIT_CODE",
-    "test:watch": "npm run build && npm run test:setup && vitest; npm run test:teardown",
+    "test": "fun() { npm run build && npm run test:setup && vitest --run \"$@\" && npm run test:teardown; }; fun",
+    "test:watch": "fun() { npm run build && npm run test:setup && vitest \"$@\" && npm run test:teardown; }; fun",
     "test:setup": "docker compose up -d && npm run wait-for-db && npm run migrate",
     "test:teardown": "docker compose down",
     "migrate": "knex migrate:latest --knexfile knexfile.ts",
@@ -19,7 +19,7 @@
     "postgresql",
     "event sourcing"
   ],
-    "files": [
+  "files": [
     "dist",
     "README.md",
     "LICENSE"
@@ -32,6 +32,7 @@
     "dotenv": "^16.4.7",
     "tsup": "^8.3.6",
     "typescript": "^5.7.1",
+    "ulidx": "^2.4.1",
     "vitest": "^3.0.5"
   },
   "peerDependencies": {

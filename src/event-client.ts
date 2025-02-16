@@ -30,6 +30,9 @@ export type EventClient<
   saveEventWithStreamValidation: <T extends z.infer<TEventUnion>['type']>(
     params: SaveEventWithValidationParams<EventInput<Extract<z.infer<TEventUnion>, { type: T }>>>
   ) => Promise<Extract<z.infer<TEventUnion>, { type: T }>>;
+  saveEventsWithStreamValidation: <T extends z.infer<TEventUnion>['type']>(
+    params: SaveEventsWithValidationParams<EventInput<Extract<z.infer<TEventUnion>, { type: T }>>>
+  ) => Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>>;
 }
 
 export type Event<EType extends string, EData extends unknown> = {
@@ -85,6 +88,15 @@ type QueryProjectionsParams = {
 
 type SaveEventWithValidationParams<TEvent> = {
   event: TEvent;
+  latestEventId: bigint;
+  streams: Array<{
+    types: string[];
+    filter?: DataFilter;
+  }>;
+}
+
+type SaveEventsWithValidationParams<TEvent> = {
+  events: TEvent[];
   latestEventId: bigint;
   streams: Array<{
     types: string[];
@@ -283,6 +295,45 @@ export const createEventClient = <
       }
 
       return eventUnion.parse(result.rows[0]);
+    },
+
+    saveEventsWithStreamValidation: async <T extends z.infer<TEventUnion>['type']>(
+      params: SaveEventsWithValidationParams<EventInput<Extract<z.infer<TEventUnion>, { type: T }>>>
+    ): Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>> => {
+      // Validate all inputs
+      const validatedInputs = params.events.map((event: EventInput<Extract<z.infer<TEventUnion>, { type: T }>>) => inputUnion.parse(event));
+      
+      // Define the CTE using Knex query builder
+      const newerEventsQuery = knex
+        .select('id')
+        .from('events')
+        .where('id', '>', params.latestEventId.toString())
+        .where((builder) => {
+          params.streams.forEach((stream) => {
+            builder.orWhere((subBuilder) => {
+              subBuilder.whereIn('type', stream.types);
+              applyDataFilters(subBuilder, stream.filter);
+            });
+          });
+        })
+        .limit(1);
+
+      const sql = `
+        WITH newer_events AS (${newerEventsQuery.toString()})
+        INSERT INTO events (type, data)
+        SELECT * FROM (VALUES ${validatedInputs.map(() => '(?, ?::jsonb)').join(',')}) AS v(type, data)
+        WHERE NOT EXISTS (SELECT 1 FROM newer_events)
+        RETURNING id, type, data, created_at, updated_at;
+      `;
+
+      const values = validatedInputs.flatMap(input => [input.type, JSON.stringify(input.data)]);
+      const result = await knex.raw(sql, values);
+
+      if (!result?.rows?.length) {
+        throw new Error('Concurrent modification detected');
+      }
+
+      return result.rows.map((event: z.infer<TEventUnion>) => eventUnion.parse(event));
     }
   };
 };

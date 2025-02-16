@@ -20,3 +20,6 @@ Absolutes:
     - The output of each test MUST NOT be influence by the actions of other tests
     - Shared setup should be handled by reusable utility functions that can be called at the beginning of each test
 - Tests SHALL use the compiled code from the `dist` folder and SHALL NOT use the code from the `src` folder
+
+Diagnosing Test Errors:
+- Because the tests use compiled code from the `dist` folder, you have to run `npm run build`, `npm run test`, or `npm run typecheck` in order for the `dist` folder to be updated (all of those commands will build the dist)
