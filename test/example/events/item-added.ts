@@ -1,5 +1,8 @@
 import { z } from 'zod';
-import { createEventSchema, createEventInputSchema } from '../../../src/event-schema';
+import {
+  createEventSchema,
+  createEventInputSchema,
+} from '../../../src/event-schema';
 
 export const ITEM_ADDED = 'ITEM_ADDED' as const;
 
@@ -8,8 +11,8 @@ export const itemAddedSchema = createEventSchema(
   z.object({
     listId: z.string(),
     itemId: z.string(),
-    title: z.string()
-  })
+    title: z.string(),
+  }),
 );
 
 export const itemAddedInputSchema = createEventInputSchema(
@@ -17,9 +20,9 @@ export const itemAddedInputSchema = createEventInputSchema(
   z.object({
     listId: z.string(),
     itemId: z.string(),
-    title: z.string()
-  })
+    title: z.string(),
+  }),
 );
 
 export type ItemAddedEvent = z.infer<typeof itemAddedSchema>;
-export type ItemAddedInput = z.infer<typeof itemAddedInputSchema>; 
+export type ItemAddedInput = z.infer<typeof itemAddedInputSchema>;

@@ -27,9 +27,9 @@ describe('CompleteItemValidator', () => {
           data: {
             listId,
             itemId,
-            title: 'Item 1'
-          }
-        }
+            title: 'Item 1',
+          },
+        },
       ]);
 
       // When marking it as complete
@@ -38,8 +38,8 @@ describe('CompleteItemValidator', () => {
         type: eventTypes.ITEM_COMPLETED,
         data: {
           listId,
-          itemId
-        }
+          itemId,
+        },
       };
 
       await validator.apply(event);
@@ -63,16 +63,16 @@ describe('CompleteItemValidator', () => {
           data: {
             listId,
             itemId,
-            title: 'Item 1'
-          }
+            title: 'Item 1',
+          },
         },
         {
           type: eventTypes.ITEM_COMPLETED,
           data: {
             listId,
-            itemId
-          }
-        }
+            itemId,
+          },
+        },
       ]);
 
       // When attempting to mark it as complete again
@@ -81,19 +81,19 @@ describe('CompleteItemValidator', () => {
         type: eventTypes.ITEM_COMPLETED,
         data: {
           listId,
-          itemId
-        }
+          itemId,
+        },
       };
 
       await validator.apply(event);
-      
+
       // Then it should throw an error
       await expect(validator.save()).rejects.toThrow('Item is not incomplete');
 
       // And no new event should be saved
       const events = await client.getEventStream({
         types: [eventTypes.ITEM_COMPLETED],
-        filter: { listId: { eq: listId }, itemId: { eq: itemId } }
+        filter: { listId: { eq: listId }, itemId: { eq: itemId } },
       });
       expect(events).toHaveLength(1);
     });
@@ -110,19 +110,21 @@ describe('CompleteItemValidator', () => {
         type: eventTypes.ITEM_COMPLETED,
         data: {
           listId,
-          itemId
-        }
+          itemId,
+        },
       };
 
       await validator.apply(event);
-      
+
       // Then it should throw an error
-      await expect(validator.save()).rejects.toThrow('Item is not present in list');
+      await expect(validator.save()).rejects.toThrow(
+        'Item is not present in list',
+      );
 
       // And no event should be saved
       const events = await client.getEventStream({
         types: [eventTypes.ITEM_COMPLETED],
-        filter: { listId: { eq: listId }, itemId: { eq: itemId } }
+        filter: { listId: { eq: listId }, itemId: { eq: itemId } },
       });
       expect(events).toHaveLength(0);
     });
@@ -140,16 +142,16 @@ describe('CompleteItemValidator', () => {
           data: {
             listId,
             itemId,
-            title: 'Item 1'
-          }
+            title: 'Item 1',
+          },
         },
         {
           type: eventTypes.ITEM_REMOVED,
           data: {
             listId,
-            itemId
-          }
-        }
+            itemId,
+          },
+        },
       ]);
 
       // When attempting to complete it
@@ -158,21 +160,23 @@ describe('CompleteItemValidator', () => {
         type: eventTypes.ITEM_COMPLETED,
         data: {
           listId,
-          itemId
-        }
+          itemId,
+        },
       };
 
       await validator.apply(event);
-      
+
       // Then it should throw an error
-      await expect(validator.save()).rejects.toThrow('Item is not present in list');
+      await expect(validator.save()).rejects.toThrow(
+        'Item is not present in list',
+      );
 
       // And no event should be saved
       const events = await client.getEventStream({
         types: [eventTypes.ITEM_COMPLETED],
-        filter: { listId: { eq: listId }, itemId: { eq: itemId } }
+        filter: { listId: { eq: listId }, itemId: { eq: itemId } },
       });
       expect(events).toHaveLength(0);
     });
   });
-}); 
+});

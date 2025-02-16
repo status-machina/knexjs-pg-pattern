@@ -5,7 +5,10 @@ import type { EventClient } from '../../../src';
 
 type CompletionStatus = 'complete' | 'incomplete' | undefined;
 
-const toCompletionStatus = (status: CompletionStatus, event: UserEvent): CompletionStatus => {
+const toCompletionStatus = (
+  status: CompletionStatus,
+  event: UserEvent,
+): CompletionStatus => {
   switch (event.type) {
     case eventTypes.ITEM_COMPLETED:
       return 'complete';
@@ -29,21 +32,28 @@ const toPresentInList = (status: boolean, event: UserEvent): boolean => {
   }
 };
 
-export class MarkItemIncompleteValidator extends SingleStreamValidator<typeof eventUnion, Projection<string, unknown>> {
+export class MarkItemIncompleteValidator extends SingleStreamValidator<
+  typeof eventUnion,
+  Projection<string, unknown>
+> {
   constructor(
     eventClient: EventClient<typeof eventUnion, Projection<string, unknown>>,
     listId: string,
-    itemId: string
+    itemId: string,
   ) {
-    super(eventClient, [
-      eventTypes.ITEM_COMPLETED,
-      eventTypes.ITEM_MARKED_INCOMPLETE,
-      eventTypes.ITEM_ADDED,
-      eventTypes.ITEM_REMOVED
-    ], {
-      listId: { eq: listId },
-      itemId: { eq: itemId }
-    });
+    super(
+      eventClient,
+      [
+        eventTypes.ITEM_COMPLETED,
+        eventTypes.ITEM_MARKED_INCOMPLETE,
+        eventTypes.ITEM_ADDED,
+        eventTypes.ITEM_REMOVED,
+      ],
+      {
+        listId: { eq: listId },
+        itemId: { eq: itemId },
+      },
+    );
   }
 
   private async ensureComplete() {
@@ -54,7 +64,10 @@ export class MarkItemIncompleteValidator extends SingleStreamValidator<typeof ev
   }
 
   private async ensurePresentInList() {
-    const present = await this.reduceOnlyDbEvents<boolean>(toPresentInList, false);
+    const present = await this.reduceOnlyDbEvents<boolean>(
+      toPresentInList,
+      false,
+    );
     if (!present) {
       throw new Error('Item is not present in list');
     }
@@ -65,4 +78,4 @@ export class MarkItemIncompleteValidator extends SingleStreamValidator<typeof ev
     await this.ensureComplete();
     return true;
   }
-} 
+}

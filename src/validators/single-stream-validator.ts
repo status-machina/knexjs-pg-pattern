@@ -5,7 +5,12 @@ import type { EventInput } from '../event-schema';
 
 export abstract class SingleStreamValidator<
   TEventUnion extends z.ZodType,
-  TProjection extends { id: string; type: string; data: unknown; lastEventId: string; }
+  TProjection extends {
+    id: string;
+    type: string;
+    data: unknown;
+    lastEventId: string;
+  },
 > {
   protected eventClient: EventClient<TEventUnion, TProjection>;
   protected types: Array<z.infer<TEventUnion>['type']>;
@@ -16,7 +21,7 @@ export abstract class SingleStreamValidator<
   constructor(
     eventClient: EventClient<TEventUnion, TProjection>,
     types: Array<z.infer<TEventUnion>['type']>,
-    filter?: DataFilter
+    filter?: DataFilter,
   ) {
     this.eventClient = eventClient;
     this.types = types;
@@ -37,7 +42,7 @@ export abstract class SingleStreamValidator<
 
   protected async reduceOnlyDbEvents<T>(
     reducer: (acc: T, event: z.infer<TEventUnion>) => T,
-    defaultValue: T
+    defaultValue: T,
   ): Promise<T> {
     if (!this.cachedEventsPromise) {
       this.cachedEventsPromise = this.eventClient.getEventStream({
@@ -51,14 +56,16 @@ export abstract class SingleStreamValidator<
 
   protected async reduceEvents<T>(
     reducer: (acc: T, event: z.infer<TEventUnion>) => T,
-    defaultValue: T
+    defaultValue: T,
   ): Promise<T> {
     const events = await this.getEvents();
     return events.reduce(reducer, defaultValue);
   }
 
   public apply(
-    event: EventInput<z.infer<TEventUnion>> | Array<EventInput<z.infer<TEventUnion>>>
+    event:
+      | EventInput<z.infer<TEventUnion>>
+      | Array<EventInput<z.infer<TEventUnion>>>,
   ): this {
     if (Array.isArray(event)) {
       this.appliedEvents.push(...event);
@@ -89,15 +96,17 @@ export abstract class SingleStreamValidator<
       throw new Error('Validation failed');
     }
 
-    const cachedEvents = this.cachedEventsPromise ? await this.cachedEventsPromise : [];
-    const latestEventId = cachedEvents.length 
+    const cachedEvents = this.cachedEventsPromise
+      ? await this.cachedEventsPromise
+      : [];
+    const latestEventId = cachedEvents.length
       ? BigInt(cachedEvents[cachedEvents.length - 1].id)
       : 0n;
 
     return this.eventClient.saveEventsWithStreamValidation({
       events: this.appliedEvents,
       latestEventId,
-      streams: [{ types: this.types, filter: this.filter }]
+      streams: [{ types: this.types, filter: this.filter }],
     });
   }
-} 
+}

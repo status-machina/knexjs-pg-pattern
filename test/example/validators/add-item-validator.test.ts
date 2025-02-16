@@ -29,17 +29,17 @@ describe('AddItemValidator', () => {
           data: {
             listId,
             itemId: itemId1,
-            title: 'Item 1'
-          }
+            title: 'Item 1',
+          },
         },
         {
           type: eventTypes.ITEM_ADDED,
           data: {
             listId,
             itemId: itemId2,
-            title: 'Item 2'
-          }
-        }
+            title: 'Item 2',
+          },
+        },
       ]);
 
       // When adding a third item
@@ -49,8 +49,8 @@ describe('AddItemValidator', () => {
         data: {
           listId,
           itemId: itemId3,
-          title: 'Item 3'
-        }
+          title: 'Item 3',
+        },
       };
 
       await validator.apply(event);
@@ -77,25 +77,25 @@ describe('AddItemValidator', () => {
           data: {
             listId,
             itemId: itemId1,
-            title: 'Item 1'
-          }
+            title: 'Item 1',
+          },
         },
         {
           type: eventTypes.ITEM_ADDED,
           data: {
             listId,
             itemId: itemId2,
-            title: 'Item 2'
-          }
+            title: 'Item 2',
+          },
         },
         {
           type: eventTypes.ITEM_ADDED,
           data: {
             listId,
             itemId: itemId3,
-            title: 'Item 3'
-          }
-        }
+            title: 'Item 3',
+          },
+        },
       ]);
 
       // When attempting to add a fourth item
@@ -105,19 +105,21 @@ describe('AddItemValidator', () => {
         data: {
           listId,
           itemId: itemId4,
-          title: 'Item 4'
-        }
+          title: 'Item 4',
+        },
       };
 
       await validator.apply(event);
-      
+
       // Then it should throw an error
-      await expect(validator.save()).rejects.toThrow('Incomplete item count is greater than three');
+      await expect(validator.save()).rejects.toThrow(
+        'Incomplete item count is greater than three',
+      );
 
       // And no event should be saved
       const events = await client.getEventStream({
         types: [eventTypes.ITEM_ADDED],
-        filter: { listId: { eq: listId }, itemId: { eq: itemId4 } }
+        filter: { listId: { eq: listId }, itemId: { eq: itemId4 } },
       });
       expect(events).toHaveLength(0);
     });
@@ -138,32 +140,32 @@ describe('AddItemValidator', () => {
           data: {
             listId,
             itemId: itemId1,
-            title: 'Item 1'
-          }
+            title: 'Item 1',
+          },
         },
         {
           type: eventTypes.ITEM_ADDED,
           data: {
             listId,
             itemId: itemId2,
-            title: 'Item 2'
-          }
+            title: 'Item 2',
+          },
         },
         {
           type: eventTypes.ITEM_ADDED,
           data: {
             listId,
             itemId: itemId3,
-            title: 'Item 3'
-          }
+            title: 'Item 3',
+          },
         },
         {
           type: eventTypes.ITEM_COMPLETED,
           data: {
             listId,
-            itemId: itemId1
-          }
-        }
+            itemId: itemId1,
+          },
+        },
       ]);
 
       // When adding a new item
@@ -173,8 +175,8 @@ describe('AddItemValidator', () => {
         data: {
           listId,
           itemId: itemId4,
-          title: 'Item 4'
-        }
+          title: 'Item 4',
+        },
       };
 
       await validator.apply(event);
@@ -201,32 +203,32 @@ describe('AddItemValidator', () => {
           data: {
             listId,
             itemId: itemId1,
-            title: 'Item 1'
-          }
+            title: 'Item 1',
+          },
         },
         {
           type: eventTypes.ITEM_ADDED,
           data: {
             listId,
             itemId: itemId2,
-            title: 'Item 2'
-          }
+            title: 'Item 2',
+          },
         },
         {
           type: eventTypes.ITEM_ADDED,
           data: {
             listId,
             itemId: itemId3,
-            title: 'Item 3'
-          }
+            title: 'Item 3',
+          },
         },
         {
           type: eventTypes.ITEM_REMOVED,
           data: {
             listId,
-            itemId: itemId1
-          }
-        }
+            itemId: itemId1,
+          },
+        },
       ]);
 
       // When adding a new item
@@ -236,8 +238,8 @@ describe('AddItemValidator', () => {
         data: {
           listId,
           itemId: itemId4,
-          title: 'Item 4'
-        }
+          title: 'Item 4',
+        },
       };
 
       await validator.apply(event);
@@ -264,39 +266,39 @@ describe('AddItemValidator', () => {
           data: {
             listId,
             itemId: itemId1,
-            title: 'Item 1'
-          }
+            title: 'Item 1',
+          },
         },
         {
           type: eventTypes.ITEM_ADDED,
           data: {
             listId,
             itemId: itemId2,
-            title: 'Item 2'
-          }
+            title: 'Item 2',
+          },
         },
         {
           type: eventTypes.ITEM_ADDED,
           data: {
             listId,
             itemId: itemId3,
-            title: 'Item 3'
-          }
+            title: 'Item 3',
+          },
         },
         {
           type: eventTypes.ITEM_COMPLETED,
           data: {
             listId,
-            itemId: itemId1
-          }
+            itemId: itemId1,
+          },
         },
         {
           type: eventTypes.ITEM_MARKED_INCOMPLETE,
           data: {
             listId,
-            itemId: itemId1
-          }
-        }
+            itemId: itemId1,
+          },
+        },
       ]);
 
       // When attempting to add a third item
@@ -306,21 +308,23 @@ describe('AddItemValidator', () => {
         data: {
           listId,
           itemId: itemId4,
-          title: 'Item 4'
-        }
+          title: 'Item 4',
+        },
       };
 
       await validator.apply(event);
-      
+
       // Then it should throw an error
-      await expect(validator.save()).rejects.toThrow('Incomplete item count is greater than three');
+      await expect(validator.save()).rejects.toThrow(
+        'Incomplete item count is greater than three',
+      );
 
       // And no event should be saved
       const events = await client.getEventStream({
         types: [eventTypes.ITEM_ADDED],
-        filter: { listId: { eq: listId }, itemId: { eq: itemId4 } }
+        filter: { listId: { eq: listId }, itemId: { eq: itemId4 } },
       });
       expect(events).toHaveLength(0);
     });
   });
-}); 
+});

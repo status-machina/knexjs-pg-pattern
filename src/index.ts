@@ -3,9 +3,9 @@ export type { EventClient, Event, Projection } from './event-client';
 export type { EventInput } from './event-schema';
 export type { DataFilter, QueryOperators } from './query-types';
 export { SingleStreamValidator, MultiStreamValidator } from './validators';
-export { 
+export {
   createEventsTableMigration,
   createProjectionsTableMigration,
   createEventDataIndexMigration,
-  createProjectionDataIndexMigration
+  createProjectionDataIndexMigration,
 } from './migration-functions';

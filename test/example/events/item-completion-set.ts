@@ -1,5 +1,8 @@
 import { z } from 'zod';
-import { createEventSchema, createEventInputSchema } from '../../../src/event-schema';
+import {
+  createEventSchema,
+  createEventInputSchema,
+} from '../../../src/event-schema';
 
 export const ITEM_COMPLETION_SET = 'ITEM_COMPLETION_SET' as const;
 
@@ -8,8 +11,8 @@ export const itemCompletionSetSchema = createEventSchema(
   z.object({
     listId: z.string(),
     itemId: z.string(),
-    completed: z.boolean()
-  })
+    completed: z.boolean(),
+  }),
 );
 
 export const itemCompletionSetInputSchema = createEventInputSchema(
@@ -17,9 +20,11 @@ export const itemCompletionSetInputSchema = createEventInputSchema(
   z.object({
     listId: z.string(),
     itemId: z.string(),
-    completed: z.boolean()
-  })
+    completed: z.boolean(),
+  }),
 );
 
 export type ItemCompletionSetEvent = z.infer<typeof itemCompletionSetSchema>;
-export type ItemCompletionSetInput = z.infer<typeof itemCompletionSetInputSchema>; 
+export type ItemCompletionSetInput = z.infer<
+  typeof itemCompletionSetInputSchema
+>;

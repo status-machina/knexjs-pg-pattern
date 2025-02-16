@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createEventClient } from "../dist";
+import { createEventClient } from '../dist';
 import { eventUnion, eventInputUnion, eventTypes } from './example/events';
 import { db } from './example/db';
 import { ulid } from 'ulidx';
@@ -16,13 +16,13 @@ describe('EventClient', () => {
     it('should save and return a valid event', async () => {
       const client = createEventClient(eventUnion, eventInputUnion, knex);
       const listId = ulid();
-      
+
       const eventInput = {
         type: eventTypes.LIST_CREATED,
         data: {
           listId,
-          name: 'Test List'
-        }
+          name: 'Test List',
+        },
       };
 
       const savedEvent = await client.saveEvent(eventInput);
@@ -40,13 +40,13 @@ describe('EventClient', () => {
     it('should reject invalid event data', async () => {
       const client = createEventClient(eventUnion, eventInputUnion, knex);
       const listId = ulid();
-      
+
       const invalidEvent = {
         type: eventTypes.LIST_CREATED,
         data: {
           // missing required name field
-          listId
-        }
+          listId,
+        },
       };
 
       await expect(client.saveEvent(invalidEvent)).rejects.toThrow();
@@ -65,16 +65,16 @@ describe('EventClient', () => {
           type: eventTypes.LIST_CREATED,
           data: {
             listId: listId1,
-            name: 'Test List 1'
-          }
+            name: 'Test List 1',
+          },
         },
         {
           type: eventTypes.LIST_CREATED,
           data: {
             listId: listId2,
-            name: 'Test List 2'
-          }
-        }
+            name: 'Test List 2',
+          },
+        },
       ]);
 
       const name = events[0].data.name;
@@ -82,8 +82,8 @@ describe('EventClient', () => {
       const latestEvent = await client.getLatestEvent({
         type: eventTypes.LIST_CREATED,
         filter: {
-          listId: { eq: listId2 }
-        }
+          listId: { eq: listId2 },
+        },
       });
 
       expect(latestEvent).toBeDefined();
@@ -98,19 +98,19 @@ describe('EventClient', () => {
       await client.saveEvents([
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId1, name: 'List 1' }
+          data: { listId: listId1, name: 'List 1' },
         },
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId2, name: 'List 2' }
-        }
+          data: { listId: listId2, name: 'List 2' },
+        },
       ]);
 
       const event = await client.getLatestEvent({
         type: eventTypes.LIST_CREATED,
         filter: {
-          listId: { in: [listId1, listId2] }
-        }
+          listId: { in: [listId1, listId2] },
+        },
       });
 
       expect(event).toBeDefined();
@@ -129,24 +129,24 @@ describe('EventClient', () => {
           data: {
             listId,
             itemId: itemId1,
-            priority: 5
-          }
+            priority: 5,
+          },
         },
         {
           type: eventTypes.ITEM_PRIORITY_SET,
           data: {
             listId,
             itemId: itemId2,
-            priority: 10
-          }
-        }
+            priority: 10,
+          },
+        },
       ]);
 
       const event = await client.getLatestEvent({
         type: eventTypes.ITEM_PRIORITY_SET,
         filter: {
-          priority: { gt: 7 }
-        }
+          priority: { gt: 7 },
+        },
       });
 
       expect(event).toBeDefined();
@@ -165,23 +165,23 @@ describe('EventClient', () => {
           data: {
             listId,
             itemId,
-            title: 'Item 1'
-          }
+            title: 'Item 1',
+          },
         },
         {
           type: eventTypes.ITEM_COMPLETED,
           data: {
             listId,
-            itemId
-          }
-        }
+            itemId,
+          },
+        },
       ]);
 
       const event = await client.getLatestEvent({
         type: eventTypes.ITEM_COMPLETED,
         filter: {
-          itemId: { eq: itemId }
-        }
+          itemId: { eq: itemId },
+        },
       });
 
       type ItemCompletedEvent = { data: { itemId: string } };
@@ -197,23 +197,23 @@ describe('EventClient', () => {
       await client.saveEvents([
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId1, name: 'List A' }
+          data: { listId: listId1, name: 'List A' },
         },
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId2, name: 'List B' }
-        }
+          data: { listId: listId2, name: 'List B' },
+        },
       ]);
 
       const eqEvent = await client.getLatestEvent({
         type: eventTypes.LIST_CREATED,
-        filter: { name: { eq: 'List B' } }
+        filter: { name: { eq: 'List B' } },
       });
       expect(eqEvent?.data.name).toBe('List B');
 
       const neqEvent = await client.getLatestEvent({
         type: eventTypes.LIST_CREATED,
-        filter: { name: { neq: 'List A' } }
+        filter: { name: { neq: 'List A' } },
       });
       expect(neqEvent?.data.name).toBe('List B');
     });
@@ -227,27 +227,27 @@ describe('EventClient', () => {
       await client.saveEvents([
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId1, name: 'List A' }
+          data: { listId: listId1, name: 'List A' },
         },
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId2, name: 'List B' }
+          data: { listId: listId2, name: 'List B' },
         },
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId3, name: 'List C' }
-        }
+          data: { listId: listId3, name: 'List C' },
+        },
       ]);
 
       const inEvent = await client.getLatestEvent({
         type: eventTypes.LIST_CREATED,
-        filter: { listId: { in: [listId1, listId2] } }
+        filter: { listId: { in: [listId1, listId2] } },
       });
       expect([listId1, listId2]).toContain(inEvent?.data.listId);
 
       const ninEvent = await client.getLatestEvent({
         type: eventTypes.LIST_CREATED,
-        filter: { listId: { nin: [listId1, listId2] } }
+        filter: { listId: { nin: [listId1, listId2] } },
       });
       expect(ninEvent?.data.listId).toBe(listId3);
     });
@@ -262,39 +262,39 @@ describe('EventClient', () => {
       await client.saveEvents([
         {
           type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId, itemId: itemId1, priority: 5 }
+          data: { listId, itemId: itemId1, priority: 5 },
         },
         {
           type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId, itemId: itemId2, priority: 10 }
+          data: { listId, itemId: itemId2, priority: 10 },
         },
         {
           type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId, itemId: itemId3, priority: 15 }
-        }
+          data: { listId, itemId: itemId3, priority: 15 },
+        },
       ]);
 
       const gtEvent = await client.getLatestEvent({
         type: eventTypes.ITEM_PRIORITY_SET,
-        filter: { priority: { gt: 12 } }
+        filter: { priority: { gt: 12 } },
       });
       expect(gtEvent?.data.itemId).toBe(itemId3);
 
       const gteEvent = await client.getLatestEvent({
         type: eventTypes.ITEM_PRIORITY_SET,
-        filter: { priority: { gte: 10 } }
+        filter: { priority: { gte: 10 } },
       });
       expect([itemId2, itemId3]).toContain(gteEvent?.data.itemId);
 
       const ltEvent = await client.getLatestEvent({
         type: eventTypes.ITEM_PRIORITY_SET,
-        filter: { priority: { lt: 7 } }
+        filter: { priority: { lt: 7 } },
       });
       expect(ltEvent?.data.itemId).toBe(itemId1);
 
       const lteEvent = await client.getLatestEvent({
         type: eventTypes.ITEM_PRIORITY_SET,
-        filter: { priority: { lte: 10 } }
+        filter: { priority: { lte: 10 } },
       });
       expect([itemId1, itemId2]).toContain(lteEvent?.data.itemId);
     });
@@ -310,24 +310,24 @@ describe('EventClient', () => {
       await client.saveEvents([
         {
           type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId: listId1, itemId: itemId1, priority: 5 }
+          data: { listId: listId1, itemId: itemId1, priority: 5 },
         },
         {
           type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId: listId1, itemId: itemId2, priority: 10 }
+          data: { listId: listId1, itemId: itemId2, priority: 10 },
         },
         {
           type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId: listId2, itemId: itemId3, priority: 15 }
-        }
+          data: { listId: listId2, itemId: itemId3, priority: 15 },
+        },
       ]);
 
       const event = await client.getLatestEvent({
         type: eventTypes.ITEM_PRIORITY_SET,
         filter: {
           listId: { eq: listId1 },
-          priority: { gt: 7 }
-        }
+          priority: { gt: 7 },
+        },
       });
 
       expect(event?.data.itemId).toBe(itemId2);
@@ -346,21 +346,23 @@ describe('EventClient', () => {
       await client.saveEvents([
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId1, name: 'List 1' }
+          data: { listId: listId1, name: 'List 1' },
         },
         {
           type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId: listId1, itemId, priority: 5 }
+          data: { listId: listId1, itemId, priority: 5 },
         },
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId2, name: 'List 2' }
-        }
+          data: { listId: listId2, name: 'List 2' },
+        },
       ]);
 
-      const events = await client.getEventStream<typeof eventTypes.LIST_CREATED>({
+      const events = await client.getEventStream<
+        typeof eventTypes.LIST_CREATED
+      >({
         types: [eventTypes.LIST_CREATED],
-        filter: { listId: { in: [listId1, listId2] } }
+        filter: { listId: { in: [listId1, listId2] } },
       });
 
       expect(events).toHaveLength(2);
@@ -379,25 +381,27 @@ describe('EventClient', () => {
       await client.saveEvents([
         {
           type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId: listId1, itemId: itemId1, priority: 5 }
+          data: { listId: listId1, itemId: itemId1, priority: 5 },
         },
         {
           type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId: listId1, itemId: itemId2, priority: 10 }
+          data: { listId: listId1, itemId: itemId2, priority: 10 },
         },
         {
           type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId: listId2, itemId: itemId3, priority: 15 }
-        }
+          data: { listId: listId2, itemId: itemId3, priority: 15 },
+        },
       ]);
 
-      const events = await client.getEventStream<typeof eventTypes.ITEM_PRIORITY_SET>({
+      const events = await client.getEventStream<
+        typeof eventTypes.ITEM_PRIORITY_SET
+      >({
         types: [eventTypes.ITEM_PRIORITY_SET],
         filter: {
           listId: { eq: listId1 },
           priority: { gt: 7 },
-          itemId: { in: [itemId1, itemId2] }
-        }
+          itemId: { in: [itemId1, itemId2] },
+        },
       });
 
       expect(events).toHaveLength(1);
@@ -414,28 +418,30 @@ describe('EventClient', () => {
       await client.saveEvents([
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId1, name: 'List 1' }
+          data: { listId: listId1, name: 'List 1' },
         },
         {
           type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId: listId1, itemId, priority: 5 }
+          data: { listId: listId1, itemId, priority: 5 },
         },
         {
           type: eventTypes.ITEM_COMPLETED,
-          data: { listId: listId1, itemId }
+          data: { listId: listId1, itemId },
         },
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId2, name: 'List 2' }
-        }
+          data: { listId: listId2, name: 'List 2' },
+        },
       ]);
 
-      const events = await client.getEventStream<typeof eventTypes.ITEM_PRIORITY_SET | typeof eventTypes.ITEM_COMPLETED>({
+      const events = await client.getEventStream<
+        typeof eventTypes.ITEM_PRIORITY_SET | typeof eventTypes.ITEM_COMPLETED
+      >({
         types: [eventTypes.ITEM_PRIORITY_SET, eventTypes.ITEM_COMPLETED],
         filter: {
           listId: { eq: listId1 },
-          itemId: { eq: itemId }
-        }
+          itemId: { eq: itemId },
+        },
       });
 
       expect(events).toHaveLength(2);
@@ -454,38 +460,44 @@ describe('EventClient', () => {
       await client.saveEvents([
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId1, name: 'List 1' }
+          data: { listId: listId1, name: 'List 1' },
         },
         {
           type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId: listId1, itemId, priority: 5 }
+          data: { listId: listId1, itemId, priority: 5 },
         },
         {
           type: eventTypes.ITEM_COMPLETED,
-          data: { listId: listId1, itemId }
+          data: { listId: listId1, itemId },
         },
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId2, name: 'List 2' }
-        }
+          data: { listId: listId2, name: 'List 2' },
+        },
       ]);
 
-      const events = await client.getEventStreams<typeof eventTypes.LIST_CREATED | typeof eventTypes.ITEM_PRIORITY_SET | typeof eventTypes.ITEM_COMPLETED>({
+      const events = await client.getEventStreams<
+        | typeof eventTypes.LIST_CREATED
+        | typeof eventTypes.ITEM_PRIORITY_SET
+        | typeof eventTypes.ITEM_COMPLETED
+      >({
         streams: [
           {
             types: [eventTypes.LIST_CREATED],
-            filter: { listId: { eq: listId1 } }
+            filter: { listId: { eq: listId1 } },
           },
           {
             types: [eventTypes.ITEM_PRIORITY_SET, eventTypes.ITEM_COMPLETED],
-            filter: { listId: { eq: listId1 }, itemId: { eq: itemId } }
-          }
-        ]
+            filter: { listId: { eq: listId1 }, itemId: { eq: itemId } },
+          },
+        ],
       });
 
       expect(events).toHaveLength(3);
       expect(events[0].type).toBe(eventTypes.LIST_CREATED);
-      expect((events[0] as { data: { name: string } }).data.name).toBe('List 1');
+      expect((events[0] as { data: { name: string } }).data.name).toBe(
+        'List 1',
+      );
       expect(events[1].type).toBe(eventTypes.ITEM_PRIORITY_SET);
       expect(events[2].type).toBe(eventTypes.ITEM_COMPLETED);
     });
@@ -498,29 +510,35 @@ describe('EventClient', () => {
       await client.saveEvents([
         {
           type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId, itemId, priority: 5 }
+          data: { listId, itemId, priority: 5 },
         },
         {
           type: eventTypes.ITEM_COMPLETED,
-          data: { listId, itemId }
-        }
+          data: { listId, itemId },
+        },
       ]);
 
-      const events = await client.getEventStreams<typeof eventTypes.ITEM_PRIORITY_SET | typeof eventTypes.ITEM_COMPLETED>({
+      const events = await client.getEventStreams<
+        typeof eventTypes.ITEM_PRIORITY_SET | typeof eventTypes.ITEM_COMPLETED
+      >({
         streams: [
           {
             types: [eventTypes.ITEM_PRIORITY_SET, eventTypes.ITEM_COMPLETED],
-            filter: { listId: { eq: listId }, itemId: { eq: itemId } }
+            filter: { listId: { eq: listId }, itemId: { eq: itemId } },
           },
           {
             types: [eventTypes.ITEM_PRIORITY_SET],
-            filter: { listId: { eq: listId }, itemId: { eq: itemId }, priority: { eq: 5 } }
-          }
-        ]
+            filter: {
+              listId: { eq: listId },
+              itemId: { eq: itemId },
+              priority: { eq: 5 },
+            },
+          },
+        ],
       });
 
       expect(events).toHaveLength(2);
-      const eventIds = events.map(e => e.id);
+      const eventIds = events.map((e) => e.id);
       const uniqueEventIds = [...new Set(eventIds)];
       expect(eventIds).toEqual(uniqueEventIds);
       expect(events[0].type).toBe(eventTypes.ITEM_PRIORITY_SET);
@@ -537,28 +555,28 @@ describe('EventClient', () => {
       const [event1] = await client.saveEvents([
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId, name: 'List 1' }
-        }
+          data: { listId, name: 'List 1' },
+        },
       ]);
 
       await client.saveEventWithStreamValidation({
         event: {
           type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId, itemId, priority: 5 }
+          data: { listId, itemId, priority: 5 },
         },
         latestEventId: event1.id,
         streams: [
           {
             types: [eventTypes.LIST_CREATED, eventTypes.ITEM_PRIORITY_SET],
-            filter: { listId: { eq: listId } }
-          }
-        ]
+            filter: { listId: { eq: listId } },
+          },
+        ],
       });
 
       // Verify the event was saved
       const events = await client.getEventStream({
         types: [eventTypes.ITEM_PRIORITY_SET],
-        filter: { listId: { eq: listId }, itemId: { eq: itemId } }
+        filter: { listId: { eq: listId }, itemId: { eq: itemId } },
       });
       expect(events).toHaveLength(1);
       expect(events[0].data.priority).toBe(5);
@@ -572,35 +590,37 @@ describe('EventClient', () => {
       const [event1] = await client.saveEvents([
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId, name: 'List 1' }
-        }
+          data: { listId, name: 'List 1' },
+        },
       ]);
 
       // Add a newer event
       await client.saveEvent({
         type: eventTypes.ITEM_PRIORITY_SET,
-        data: { listId, itemId, priority: 10 }
+        data: { listId, itemId, priority: 10 },
       });
 
       // Try to save with old event id
-      await expect(client.saveEventWithStreamValidation({
-        event: {
-          type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId, itemId, priority: 5 }
-        },
-        latestEventId: event1.id,
-        streams: [
-          {
-            types: [eventTypes.LIST_CREATED, eventTypes.ITEM_PRIORITY_SET],
-            filter: { listId: { eq: listId } }
-          }
-        ]
-      })).rejects.toThrow('Concurrent modification detected');
+      await expect(
+        client.saveEventWithStreamValidation({
+          event: {
+            type: eventTypes.ITEM_PRIORITY_SET,
+            data: { listId, itemId, priority: 5 },
+          },
+          latestEventId: event1.id,
+          streams: [
+            {
+              types: [eventTypes.LIST_CREATED, eventTypes.ITEM_PRIORITY_SET],
+              filter: { listId: { eq: listId } },
+            },
+          ],
+        }),
+      ).rejects.toThrow('Concurrent modification detected');
 
       // Verify only the original events exist
       const events = await client.getEventStream({
         types: [eventTypes.ITEM_PRIORITY_SET],
-        filter: { listId: { eq: listId }, itemId: { eq: itemId } }
+        filter: { listId: { eq: listId }, itemId: { eq: itemId } },
       });
       expect(events).toHaveLength(1);
       expect(events[0].data.priority).toBe(10);
@@ -612,31 +632,33 @@ describe('EventClient', () => {
       const client = createEventClient(eventUnion, eventInputUnion, knex);
       const listId1 = ulid();
       const listId2 = ulid();
-      
+
       const events = [
         {
           type: eventTypes.LIST_CREATED,
           data: {
             listId: listId1,
-            name: 'Test List 1'
-          }
+            name: 'Test List 1',
+          },
         },
         {
           type: eventTypes.LIST_CREATED,
           data: {
             listId: listId2,
-            name: 'Test List 2'
-          }
-        }
+            name: 'Test List 2',
+          },
+        },
       ];
 
       const savedEvents = await client.saveEventsWithStreamValidation({
         events,
         latestEventId: 0n,
-        streams: [{ 
-          types: [eventTypes.LIST_CREATED],
-          filter: { listId: { in: [listId1, listId2] } }
-        }]
+        streams: [
+          {
+            types: [eventTypes.LIST_CREATED],
+            filter: { listId: { in: [listId1, listId2] } },
+          },
+        ],
       });
 
       expect(savedEvents).toHaveLength(2);
@@ -654,14 +676,14 @@ describe('EventClient', () => {
       const client = createEventClient(eventUnion, eventInputUnion, knex);
       const listId1 = ulid();
       const listId2 = ulid();
-      
+
       // Create an initial event
-      const initialEvent = await client.saveEvent({
+      const _initialEvent = await client.saveEvent({
         type: eventTypes.LIST_CREATED,
         data: {
           listId: listId1,
-          name: 'Test List'
-        }
+          name: 'Test List',
+        },
       });
 
       const events = [
@@ -669,20 +691,24 @@ describe('EventClient', () => {
           type: eventTypes.LIST_CREATED,
           data: {
             listId: listId2,
-            name: 'Test List 2'
-          }
-        }
+            name: 'Test List 2',
+          },
+        },
       ];
 
       // Try to save with an old latestEventId
-      await expect(client.saveEventsWithStreamValidation({
-        events,
-        latestEventId: 0n,
-        streams: [{ 
-          types: [eventTypes.LIST_CREATED],
-          filter: { listId: { in: [listId1, listId2] } }
-        }]
-      })).rejects.toThrow('Concurrent modification detected');
+      await expect(
+        client.saveEventsWithStreamValidation({
+          events,
+          latestEventId: 0n,
+          streams: [
+            {
+              types: [eventTypes.LIST_CREATED],
+              filter: { listId: { in: [listId1, listId2] } },
+            },
+          ],
+        }),
+      ).rejects.toThrow('Concurrent modification detected');
     });
   });
-}); 
+});

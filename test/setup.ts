@@ -23,4 +23,4 @@ export async function setupTestDatabase(): Promise<{ client: Knex }> {
 export async function teardownTestDatabase(): Promise<void> {
   await client?.destroy();
   client = undefined;
-} 
+}

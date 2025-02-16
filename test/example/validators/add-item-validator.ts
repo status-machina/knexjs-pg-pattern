@@ -3,34 +3,47 @@ import { eventUnion, eventTypes, UserEvent } from '../events';
 import type { Projection } from '../../../src';
 import type { EventClient } from '../../../src';
 
-const toIncompleteItemIdsInList = (ids: string[], event: UserEvent): string[] => {
+const toIncompleteItemIdsInList = (
+  ids: string[],
+  event: UserEvent,
+): string[] => {
   switch (event.type) {
     case eventTypes.ITEM_ADDED:
       return [...ids, event.data.itemId];
     case eventTypes.ITEM_REMOVED:
-      return ids.filter(id => id !== event.data.itemId);
+      return ids.filter((id) => id !== event.data.itemId);
     case eventTypes.ITEM_COMPLETED:
-      return ids.filter(id => id !== event.data.itemId);
+      return ids.filter((id) => id !== event.data.itemId);
     case eventTypes.ITEM_MARKED_INCOMPLETE:
-      return [...ids.filter(id => id !== event.data.itemId), event.data.itemId];
+      return [
+        ...ids.filter((id) => id !== event.data.itemId),
+        event.data.itemId,
+      ];
     default:
       return ids;
   }
 };
 
-export class AddItemValidator extends SingleStreamValidator<typeof eventUnion, Projection<string, unknown>> {
+export class AddItemValidator extends SingleStreamValidator<
+  typeof eventUnion,
+  Projection<string, unknown>
+> {
   constructor(
     eventClient: EventClient<typeof eventUnion, Projection<string, unknown>>,
-    listId: string
+    listId: string,
   ) {
-    super(eventClient, [
-      eventTypes.ITEM_ADDED,
-      eventTypes.ITEM_REMOVED,
-      eventTypes.ITEM_COMPLETED,
-      eventTypes.ITEM_MARKED_INCOMPLETE
-    ], {
-      listId: { eq: listId }
-    });
+    super(
+      eventClient,
+      [
+        eventTypes.ITEM_ADDED,
+        eventTypes.ITEM_REMOVED,
+        eventTypes.ITEM_COMPLETED,
+        eventTypes.ITEM_MARKED_INCOMPLETE,
+      ],
+      {
+        listId: { eq: listId },
+      },
+    );
   }
 
   private async ensureIncompleteItemCountIsLessThanThree() {
@@ -45,4 +58,4 @@ export class AddItemValidator extends SingleStreamValidator<typeof eventUnion, P
     await this.ensureIncompleteItemCountIsLessThanThree();
     return true;
   }
-} 
+}

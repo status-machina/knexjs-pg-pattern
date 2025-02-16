@@ -1,4 +1,4 @@
-import type { Knex } from "knex";
+import type { Knex } from 'knex';
 
 export type QueryOperators<T> = {
   eq?: T;
@@ -16,7 +16,11 @@ export type DataFilter = {
 };
 
 type QueryBuilder = {
-  whereData: (field: string, operator: keyof QueryOperators<any>, value: any) => Knex.QueryBuilder;
+  whereData: (
+    field: string,
+    operator: keyof QueryOperators<any>,
+    value: any,
+  ) => Knex.QueryBuilder;
 };
 
 export const operatorMap: Record<keyof QueryOperators<any>, string> = {
@@ -27,5 +31,5 @@ export const operatorMap: Record<keyof QueryOperators<any>, string> = {
   gt: '>',
   gte: '>=',
   lt: '<',
-  lte: '<='
-}; 
+  lte: '<=',
+};

@@ -8,9 +8,9 @@ async function waitForDb(retries = 30, interval = 1000) {
       port: 5432,
       user: 'test_user',
       password: 'test_password',
-      database: 'test_db'
+      database: 'test_db',
     });
-    
+
     try {
       await client.connect();
       await client.query('SELECT 1');
@@ -23,11 +23,11 @@ async function waitForDb(retries = 30, interval = 1000) {
       await setTimeout(interval);
     }
   }
-  
+
   throw new Error('Database connection failed after retries');
 }
 
-waitForDb().catch(err => {
+waitForDb().catch((err) => {
   console.error('Failed to connect to database:', err);
   process.exit(1);
-}); 
+});

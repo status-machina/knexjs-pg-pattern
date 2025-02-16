@@ -1,11 +1,39 @@
 import { z } from 'zod';
-import { listCreatedSchema, listCreatedInputSchema, LIST_CREATED } from './list-created';
-import { listDeletedSchema, listDeletedInputSchema, LIST_DELETED } from './list-deleted';
-import { itemPrioritySetSchema, itemPrioritySetInputSchema, ITEM_PRIORITY_SET } from './item-priority-set';
-import { itemAddedSchema, itemAddedInputSchema, ITEM_ADDED } from './item-added';
-import { itemRemovedSchema, itemRemovedInputSchema, ITEM_REMOVED } from './item-removed';
-import { itemCompletedSchema, itemCompletedInputSchema, ITEM_COMPLETED } from './item-completed';
-import { itemMarkedIncompleteSchema, itemMarkedIncompleteInputSchema, ITEM_MARKED_INCOMPLETE } from './item-marked-incomplete';
+import {
+  listCreatedSchema,
+  listCreatedInputSchema,
+  LIST_CREATED,
+} from './list-created';
+import {
+  listDeletedSchema,
+  listDeletedInputSchema,
+  LIST_DELETED,
+} from './list-deleted';
+import {
+  itemPrioritySetSchema,
+  itemPrioritySetInputSchema,
+  ITEM_PRIORITY_SET,
+} from './item-priority-set';
+import {
+  itemAddedSchema,
+  itemAddedInputSchema,
+  ITEM_ADDED,
+} from './item-added';
+import {
+  itemRemovedSchema,
+  itemRemovedInputSchema,
+  ITEM_REMOVED,
+} from './item-removed';
+import {
+  itemCompletedSchema,
+  itemCompletedInputSchema,
+  ITEM_COMPLETED,
+} from './item-completed';
+import {
+  itemMarkedIncompleteSchema,
+  itemMarkedIncompleteInputSchema,
+  ITEM_MARKED_INCOMPLETE,
+} from './item-marked-incomplete';
 
 export const eventTypes = {
   LIST_CREATED,
@@ -17,15 +45,11 @@ export const eventTypes = {
   ITEM_MARKED_INCOMPLETE,
 } as const;
 
-export type EventType = typeof eventTypes[keyof typeof eventTypes];
+export type EventType = (typeof eventTypes)[keyof typeof eventTypes];
 
-export const eventSchemas = [
-  listCreatedSchema,
-] as const;
-    
-export const eventInputSchemas = [
-  listCreatedInputSchema,
-] as const;
+export const eventSchemas = [listCreatedSchema] as const;
+
+export const eventInputSchemas = [listCreatedInputSchema] as const;
 
 export const otherEventSchemas = [listDeletedSchema] as const;
 
@@ -38,7 +62,7 @@ export const eventUnion = z.discriminatedUnion('type', [
   itemAddedSchema,
   itemRemovedSchema,
   itemCompletedSchema,
-  itemMarkedIncompleteSchema
+  itemMarkedIncompleteSchema,
 ]);
 
 export const eventInputUnion = z.discriminatedUnion('type', [
@@ -48,7 +72,7 @@ export const eventInputUnion = z.discriminatedUnion('type', [
   itemAddedInputSchema,
   itemRemovedInputSchema,
   itemCompletedInputSchema,
-  itemMarkedIncompleteInputSchema
+  itemMarkedIncompleteInputSchema,
 ]);
 
 export type UserEvent = z.infer<typeof eventUnion>;
@@ -58,4 +82,4 @@ export type UserEventInput = z.infer<typeof eventInputUnion>;
 // Type guard
 export const isUserEvent = (event: unknown): event is UserEvent => {
   return eventUnion.safeParse(event).success;
-}; 
+};

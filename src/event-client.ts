@@ -5,86 +5,92 @@ import { DataFilter, operatorMap, QueryOperators } from './query-types';
 
 export type EventClient<
   TEventUnion extends z.ZodType,
-  TProjection extends Projection<string, unknown>
+  TProjection extends Projection<string, unknown>,
 > = {
   saveEvent: <T extends z.infer<TEventUnion>['type']>(
-    event: EventInput<Extract<z.infer<TEventUnion>, { type: T }>>
+    event: EventInput<Extract<z.infer<TEventUnion>, { type: T }>>,
   ) => Promise<Extract<z.infer<TEventUnion>, { type: T }>>;
   saveEvents: <T extends z.infer<TEventUnion>['type']>(
-    events: Array<EventInput<Extract<z.infer<TEventUnion>, { type: T }>>>
+    events: Array<EventInput<Extract<z.infer<TEventUnion>, { type: T }>>>,
   ) => Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>>;
   getLatestEvent: <T extends z.infer<TEventUnion>['type']>(
-    params: GetLatestEventParams<T>
+    params: GetLatestEventParams<T>,
   ) => Promise<Extract<z.infer<TEventUnion>, { type: T }> | null>;
   getEventStream: <T extends z.infer<TEventUnion>['type']>(
-    params: GetEventStreamParams<T>
+    params: GetEventStreamParams<T>,
   ) => Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>>;
-  getEventStreams: <T extends z.infer<TEventUnion>['type']>(
-    params: { streams: Array<{ types: T[]; filter?: DataFilter; }> }
-  ) => Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>>;
+  getEventStreams: <T extends z.infer<TEventUnion>['type']>(params: {
+    streams: Array<{ types: T[]; filter?: DataFilter }>;
+  }) => Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>>;
   saveProjection: (params: SaveProjectionParams) => Promise<void>;
   forceUpdateProjection: (params: UpdateProjectionParams) => Promise<void>;
-  conditionalUpdateProjection: (params: ConditionalUpdateProjectionParams) => Promise<void>;
+  conditionalUpdateProjection: (
+    params: ConditionalUpdateProjectionParams,
+  ) => Promise<void>;
   getProjection: (params: GetProjectionParams) => Promise<TProjection | null>;
   queryProjections: (params: QueryProjectionsParams) => Promise<TProjection[]>;
   saveEventWithStreamValidation: <T extends z.infer<TEventUnion>['type']>(
-    params: SaveEventWithValidationParams<EventInput<Extract<z.infer<TEventUnion>, { type: T }>>>
+    params: SaveEventWithValidationParams<
+      EventInput<Extract<z.infer<TEventUnion>, { type: T }>>
+    >,
   ) => Promise<Extract<z.infer<TEventUnion>, { type: T }>>;
   saveEventsWithStreamValidation: <T extends z.infer<TEventUnion>['type']>(
-    params: SaveEventsWithValidationParams<EventInput<Extract<z.infer<TEventUnion>, { type: T }>>>
+    params: SaveEventsWithValidationParams<
+      EventInput<Extract<z.infer<TEventUnion>, { type: T }>>
+    >,
   ) => Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>>;
-}
+};
 
 export type Event<EType extends string, EData extends unknown> = {
   id: string;
   type: EType;
   data: EData;
   timestamp: number;
-}
+};
 
 export type Projection<PType extends string, PData extends unknown> = {
   id: string;
   type: PType;
   data: PData;
   lastEventId: string;
-}
+};
 
 type GetLatestEventParams<T extends string = string> = {
   type: T;
   filter?: DataFilter;
-}
+};
 
 type GetEventStreamParams<T extends string = string> = {
   types: T[];
   filter?: DataFilter;
-}
+};
 
 type SaveProjectionParams = {
   type: string;
   id: string;
   data: unknown;
   eventId: string;
-}
+};
 
 type UpdateProjectionParams = {
   type: string;
   id: string;
   data: unknown;
-}
+};
 
 type ConditionalUpdateProjectionParams = UpdateProjectionParams & {
   eventId: string;
-}
+};
 
 type GetProjectionParams = {
   type: string;
   id: string;
-}
+};
 
 type QueryProjectionsParams = {
   type: string;
   filter?: Record<string, unknown>;
-}
+};
 
 type SaveEventWithValidationParams<TEvent> = {
   event: TEvent;
@@ -93,7 +99,7 @@ type SaveEventWithValidationParams<TEvent> = {
     types: string[];
     filter?: DataFilter;
   }>;
-}
+};
 
 type SaveEventsWithValidationParams<TEvent> = {
   events: TEvent[];
@@ -102,7 +108,7 @@ type SaveEventsWithValidationParams<TEvent> = {
     types: string[];
     filter?: DataFilter;
   }>;
-}
+};
 
 const applyDataFilters = (query: Knex.QueryBuilder, filter?: DataFilter) => {
   if (!filter) return query;
@@ -110,7 +116,7 @@ const applyDataFilters = (query: Knex.QueryBuilder, filter?: DataFilter) => {
   for (const [field, operators] of Object.entries(filter)) {
     for (const [op, value] of Object.entries(operators)) {
       const sqlOperator = operatorMap[op as keyof QueryOperators<any>];
-      
+
       if (!sqlOperator) {
         throw new Error(`Unknown operator: ${op}`);
       }
@@ -126,20 +132,17 @@ const applyDataFilters = (query: Knex.QueryBuilder, filter?: DataFilter) => {
         // Cast to numeric for number comparisons
         query = query.whereRaw(
           `CAST(data->>'${field}' AS numeric) ${sqlOperator} ?`,
-          value
+          value,
         );
       } else if (typeof value === 'boolean') {
         // Handle boolean values
         query = query.whereRaw(
           `CAST(data->>'${field}' AS boolean) ${sqlOperator} ?`,
-          value
+          value,
         );
       } else {
         // String comparison (default)
-        query = query.whereRaw(
-          `data->>'${field}' ${sqlOperator} ?`,
-          value
-        );
+        query = query.whereRaw(`data->>'${field}' ${sqlOperator} ?`, value);
       }
     }
   }
@@ -150,17 +153,17 @@ const applyDataFilters = (query: Knex.QueryBuilder, filter?: DataFilter) => {
 export const createEventClient = <
   TEventUnion extends z.ZodType,
   TEventInputUnion extends z.ZodType,
-  TProjection extends Projection<string, unknown>
+  TProjection extends Projection<string, unknown>,
 >(
-  eventUnion: TEventUnion, 
+  eventUnion: TEventUnion,
   inputUnion: TEventInputUnion,
-  knex: Knex
+  knex: Knex,
 ): EventClient<TEventUnion, TProjection> => {
   return {
     saveEvent: async (event) => {
       // Validate the input
       const validatedInput = inputUnion.parse(event);
-      
+
       // Insert into database
       const [savedEvent] = await knex('events')
         .insert({
@@ -175,27 +178,28 @@ export const createEventClient = <
 
     saveEvents: async (events) => {
       // Validate all inputs first
-      const validatedInputs = events.map(event => inputUnion.parse(event));
-      
+      const validatedInputs = events.map((event) => inputUnion.parse(event));
+
       // Insert all events in a transaction
       const savedEvents = await knex.transaction(async (trx) => {
         const events = await trx('events')
-          .insert(validatedInputs.map(input => ({
-            type: input.type,
-            data: input.data,
-          })))
+          .insert(
+            validatedInputs.map((input) => ({
+              type: input.type,
+              data: input.data,
+            })),
+          )
           .returning(['id', 'type', 'data', 'created_at', 'updated_at']);
 
         return events;
       });
 
       // Parse and validate all events
-      return savedEvents.map(event => eventUnion.parse(event));
+      return savedEvents.map((event) => eventUnion.parse(event));
     },
 
     getLatestEvent: async (params) => {
-      let query = knex('events')
-        .where('type', params.type);
+      let query = knex('events').where('type', params.type);
 
       query = applyDataFilters(query, params.filter);
       query = query.orderBy('id', 'desc').limit(1);
@@ -205,20 +209,20 @@ export const createEventClient = <
     },
 
     getEventStream: async (params) => {
-      let query = knex('events')
-        .whereIn('type', params.types);
+      let query = knex('events').whereIn('type', params.types);
 
       query = applyDataFilters(query, params.filter);
       query = query.orderBy('id', 'asc');
 
       const events = await query.select('*');
-      return events.map(event => eventUnion.parse(event));
+      return events.map((event) => eventUnion.parse(event));
     },
 
-    getEventStreams: async <T extends z.infer<TEventUnion>['type']>(params: { streams: Array<{ types: T[]; filter?: DataFilter; }> }): Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>> => {
-      let query = knex('events')
-        .distinctOn('id');
-      
+    getEventStreams: async <T extends z.infer<TEventUnion>['type']>(params: {
+      streams: Array<{ types: T[]; filter?: DataFilter }>;
+    }): Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>> => {
+      let query = knex('events').distinctOn('id');
+
       // Build OR conditions for each stream
       query = query.where((builder) => {
         params.streams.forEach((stream, index) => {
@@ -233,7 +237,7 @@ export const createEventClient = <
       query = query.orderBy('id', 'asc');
 
       const events = await query.select('*');
-      return events.map(event => eventUnion.parse(event));
+      return events.map((event) => eventUnion.parse(event));
     },
 
     saveProjection: async (params) => {
@@ -258,12 +262,16 @@ export const createEventClient = <
       return [];
     },
 
-    saveEventWithStreamValidation: async <T extends z.infer<TEventUnion>['type']>(
-      params: SaveEventWithValidationParams<EventInput<Extract<z.infer<TEventUnion>, { type: T }>>>
+    saveEventWithStreamValidation: async <
+      T extends z.infer<TEventUnion>['type'],
+    >(
+      params: SaveEventWithValidationParams<
+        EventInput<Extract<z.infer<TEventUnion>, { type: T }>>
+      >,
     ): Promise<Extract<z.infer<TEventUnion>, { type: T }>> => {
       // Validate the input
       const validatedInput = inputUnion.parse(params.event);
-      
+
       // Define the CTE using Knex query builder
       const newerEventsQuery = knex
         .select('id')
@@ -288,7 +296,10 @@ export const createEventClient = <
       `;
 
       // Use raw for the insert with CTE
-      const result = await knex.raw(sql, [validatedInput.type, validatedInput.data]);
+      const result = await knex.raw(sql, [
+        validatedInput.type,
+        validatedInput.data,
+      ]);
 
       if (!result?.rows?.[0]) {
         throw new Error('Concurrent modification detected');
@@ -297,12 +308,19 @@ export const createEventClient = <
       return eventUnion.parse(result.rows[0]);
     },
 
-    saveEventsWithStreamValidation: async <T extends z.infer<TEventUnion>['type']>(
-      params: SaveEventsWithValidationParams<EventInput<Extract<z.infer<TEventUnion>, { type: T }>>>
+    saveEventsWithStreamValidation: async <
+      T extends z.infer<TEventUnion>['type'],
+    >(
+      params: SaveEventsWithValidationParams<
+        EventInput<Extract<z.infer<TEventUnion>, { type: T }>>
+      >,
     ): Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>> => {
       // Validate all inputs
-      const validatedInputs = params.events.map((event: EventInput<Extract<z.infer<TEventUnion>, { type: T }>>) => inputUnion.parse(event));
-      
+      const validatedInputs = params.events.map(
+        (event: EventInput<Extract<z.infer<TEventUnion>, { type: T }>>) =>
+          inputUnion.parse(event),
+      );
+
       // Define the CTE using Knex query builder
       const newerEventsQuery = knex
         .select('id')
@@ -326,14 +344,19 @@ export const createEventClient = <
         RETURNING id, type, data, created_at, updated_at;
       `;
 
-      const values = validatedInputs.flatMap(input => [input.type, JSON.stringify(input.data)]);
+      const values = validatedInputs.flatMap((input) => [
+        input.type,
+        JSON.stringify(input.data),
+      ]);
       const result = await knex.raw(sql, values);
 
       if (!result?.rows?.length) {
         throw new Error('Concurrent modification detected');
       }
 
-      return result.rows.map((event: z.infer<TEventUnion>) => eventUnion.parse(event));
-    }
+      return result.rows.map((event: z.infer<TEventUnion>) =>
+        eventUnion.parse(event),
+      );
+    },
   };
 };

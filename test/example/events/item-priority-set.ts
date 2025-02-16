@@ -1,5 +1,8 @@
 import { z } from 'zod';
-import { createEventSchema, createEventInputSchema } from '../../../src/event-schema';
+import {
+  createEventSchema,
+  createEventInputSchema,
+} from '../../../src/event-schema';
 
 export const ITEM_PRIORITY_SET = 'ITEM_PRIORITY_SET' as const;
 
@@ -8,8 +11,8 @@ export const itemPrioritySetSchema = createEventSchema(
   z.object({
     listId: z.string(),
     itemId: z.string(),
-    priority: z.number()
-  })
+    priority: z.number(),
+  }),
 );
 
 export const itemPrioritySetInputSchema = createEventInputSchema(
@@ -17,9 +20,9 @@ export const itemPrioritySetInputSchema = createEventInputSchema(
   z.object({
     listId: z.string(),
     itemId: z.string(),
-    priority: z.number()
-  })
+    priority: z.number(),
+  }),
 );
 
 export type ItemPrioritySetEvent = z.infer<typeof itemPrioritySetSchema>;
-export type ItemPrioritySetInput = z.infer<typeof itemPrioritySetInputSchema>; 
+export type ItemPrioritySetInput = z.infer<typeof itemPrioritySetInputSchema>;

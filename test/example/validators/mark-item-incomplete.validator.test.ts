@@ -27,16 +27,16 @@ describe('MarkItemIncompleteValidator', () => {
           data: {
             listId,
             itemId,
-            title: 'Item 1'
-          }
+            title: 'Item 1',
+          },
         },
         {
           type: eventTypes.ITEM_COMPLETED,
           data: {
             listId,
-            itemId
-          }
-        }
+            itemId,
+          },
+        },
       ]);
 
       // When marking it as incomplete
@@ -45,8 +45,8 @@ describe('MarkItemIncompleteValidator', () => {
         type: eventTypes.ITEM_MARKED_INCOMPLETE,
         data: {
           listId,
-          itemId
-        }
+          itemId,
+        },
       };
 
       await validator.apply(event);
@@ -70,9 +70,9 @@ describe('MarkItemIncompleteValidator', () => {
           data: {
             listId,
             itemId,
-            title: 'Item 1'
-          }
-        }
+            title: 'Item 1',
+          },
+        },
       ]);
 
       // When attempting to mark it as incomplete
@@ -81,19 +81,19 @@ describe('MarkItemIncompleteValidator', () => {
         type: eventTypes.ITEM_MARKED_INCOMPLETE,
         data: {
           listId,
-          itemId
-        }
+          itemId,
+        },
       };
 
       await validator.apply(event);
-      
+
       // Then it should throw an error
       await expect(validator.save()).rejects.toThrow('Item is not complete');
 
       // And no event should be saved
       const events = await client.getEventStream({
         types: [eventTypes.ITEM_MARKED_INCOMPLETE],
-        filter: { listId: { eq: listId }, itemId: { eq: itemId } }
+        filter: { listId: { eq: listId }, itemId: { eq: itemId } },
       });
       expect(events).toHaveLength(0);
     });
@@ -110,19 +110,21 @@ describe('MarkItemIncompleteValidator', () => {
         type: eventTypes.ITEM_MARKED_INCOMPLETE,
         data: {
           listId,
-          itemId
-        }
+          itemId,
+        },
       };
 
       await validator.apply(event);
-      
+
       // Then it should throw an error
-      await expect(validator.save()).rejects.toThrow('Item is not present in list');
+      await expect(validator.save()).rejects.toThrow(
+        'Item is not present in list',
+      );
 
       // And no event should be saved
       const events = await client.getEventStream({
         types: [eventTypes.ITEM_MARKED_INCOMPLETE],
-        filter: { listId: { eq: listId }, itemId: { eq: itemId } }
+        filter: { listId: { eq: listId }, itemId: { eq: itemId } },
       });
       expect(events).toHaveLength(0);
     });
@@ -140,16 +142,16 @@ describe('MarkItemIncompleteValidator', () => {
           data: {
             listId,
             itemId,
-            title: 'Item 1'
-          }
+            title: 'Item 1',
+          },
         },
         {
           type: eventTypes.ITEM_REMOVED,
           data: {
             listId,
-            itemId
-          }
-        }
+            itemId,
+          },
+        },
       ]);
 
       // When attempting to mark it as incomplete
@@ -158,21 +160,23 @@ describe('MarkItemIncompleteValidator', () => {
         type: eventTypes.ITEM_MARKED_INCOMPLETE,
         data: {
           listId,
-          itemId
-        }
+          itemId,
+        },
       };
 
       await validator.apply(event);
-      
+
       // Then it should throw an error
-      await expect(validator.save()).rejects.toThrow('Item is not present in list');
+      await expect(validator.save()).rejects.toThrow(
+        'Item is not present in list',
+      );
 
       // And no event should be saved
       const events = await client.getEventStream({
         types: [eventTypes.ITEM_MARKED_INCOMPLETE],
-        filter: { listId: { eq: listId }, itemId: { eq: itemId } }
+        filter: { listId: { eq: listId }, itemId: { eq: itemId } },
       });
       expect(events).toHaveLength(0);
     });
   });
-}); 
+});
