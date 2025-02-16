@@ -16,12 +16,13 @@ describe('EventClient', () => {
     it('should save and return a valid event', async () => {
       const client = createEventClient(eventUnion, eventInputUnion, knex);
       const listId = ulid();
+      const testId = ulid();
 
       const eventInput = {
         type: eventTypes.LIST_CREATED,
         data: {
           listId,
-          name: 'Test List',
+          name: `Test List ${testId}`,
         },
       };
 
@@ -56,6 +57,7 @@ describe('EventClient', () => {
   describe('getLatestEvent', () => {
     it('should retrieve the latest event with filters', async () => {
       const client = createEventClient(eventUnion, eventInputUnion, knex);
+      const testId = ulid();
       const listId1 = ulid();
       const listId2 = ulid();
 
@@ -65,14 +67,14 @@ describe('EventClient', () => {
           type: eventTypes.LIST_CREATED,
           data: {
             listId: listId1,
-            name: 'Test List 1',
+            name: `Test List 1 ${testId}`,
           },
         },
         {
           type: eventTypes.LIST_CREATED,
           data: {
             listId: listId2,
-            name: 'Test List 2',
+            name: `Test List 2 ${testId}`,
           },
         },
       ]);
@@ -93,17 +95,18 @@ describe('EventClient', () => {
 
     it('should handle IN operators correctly', async () => {
       const client = createEventClient(eventUnion, eventInputUnion, knex);
+      const testId = ulid();
       const listId1 = ulid();
       const listId2 = ulid();
 
       await client.saveEvents([
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId1, name: 'List 1' },
+          data: { listId: listId1, name: `List 1 ${testId}` },
         },
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId2, name: 'List 2' },
+          data: { listId: listId2, name: `List 2 ${testId}` },
         },
       ]);
 
@@ -157,6 +160,7 @@ describe('EventClient', () => {
 
     it('should handle boolean comparisons correctly', async () => {
       const client = createEventClient(eventUnion, eventInputUnion, knex);
+      const testId = ulid();
       const listId = ulid();
       const itemId = ulid();
 
@@ -166,7 +170,7 @@ describe('EventClient', () => {
           data: {
             listId,
             itemId,
-            title: 'Item 1',
+            title: `Item 1 ${testId}`,
           },
         },
         {
@@ -192,35 +196,39 @@ describe('EventClient', () => {
 
     it('should handle string equality operators correctly', async () => {
       const client = createEventClient(eventUnion, eventInputUnion, knex);
+      const testId = ulid();
       const listId1 = ulid();
       const listId2 = ulid();
+      const name1 = `List A ${testId}`;
+      const name2 = `List B ${testId}`;
 
       await client.saveEvents([
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId1, name: 'List A' },
+          data: { listId: listId1, name: name1 },
         },
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId2, name: 'List B' },
+          data: { listId: listId2, name: name2 },
         },
       ]);
 
       const eqEvent = await client.getLatestEvent({
         type: eventTypes.LIST_CREATED,
-        filter: { name: { eq: 'List B' } },
+        filter: { name: { eq: name2 } },
       });
-      expect(eqEvent?.data.name).toBe('List B');
+      expect(eqEvent?.data.name).toBe(name2);
 
       const neqEvent = await client.getLatestEvent({
         type: eventTypes.LIST_CREATED,
-        filter: { name: { neq: 'List A' } },
+        filter: { name: { neq: name1 } },
       });
-      expect(neqEvent?.data.name).toBe('List B');
+      expect(neqEvent?.data.name).toBe(name2);
     });
 
     it('should handle array operators correctly', async () => {
       const client = createEventClient(eventUnion, eventInputUnion, knex);
+      const testId = ulid();
       const listId1 = ulid();
       const listId2 = ulid();
       const listId3 = ulid();
@@ -228,15 +236,15 @@ describe('EventClient', () => {
       await client.saveEvents([
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId1, name: 'List A' },
+          data: { listId: listId1, name: `List A ${testId}` },
         },
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId2, name: 'List B' },
+          data: { listId: listId2, name: `List B ${testId}` },
         },
         {
           type: eventTypes.LIST_CREATED,
-          data: { listId: listId3, name: 'List C' },
+          data: { listId: listId3, name: `List C ${testId}` },
         },
       ]);
 
@@ -710,6 +718,308 @@ describe('EventClient', () => {
           ],
         }),
       ).rejects.toThrow('Concurrent modification detected');
+    });
+  });
+});
+
+describe('event-client projections', () => {
+  const client = createEventClient(eventUnion, eventInputUnion, db);
+
+  describe('saveProjection', () => {
+    it('should save a new projection', async () => {
+      const projectionId = ulid();
+      const eventId = 123n;
+
+      await client.saveProjection({
+        type: 'test-projection',
+        id: projectionId,
+        data: { count: 1 },
+        eventId,
+      });
+
+      const result = await client.getProjection({
+        type: 'test-projection',
+        id: projectionId,
+      });
+
+      expect(result).toMatchObject({
+        type: 'test-projection',
+        id: projectionId,
+        data: { count: 1 },
+        lastEventId: eventId,
+      });
+    });
+
+    it('should update an existing projection', async () => {
+      const projectionId = ulid();
+      const eventId1 = 123n;
+      const eventId2 = 124n;
+
+      await client.saveProjection({
+        type: 'test-projection',
+        id: projectionId,
+        data: { count: 1 },
+        eventId: eventId1,
+      });
+
+      await client.saveProjection({
+        type: 'test-projection',
+        id: projectionId,
+        data: { count: 2 },
+        eventId: eventId2,
+      });
+
+      const result = await client.getProjection({
+        type: 'test-projection',
+        id: projectionId,
+      });
+
+      expect(result).toMatchObject({
+        type: 'test-projection',
+        id: projectionId,
+        data: { count: 2 },
+        lastEventId: eventId2,
+      });
+    });
+  });
+
+  describe('forceUpdateProjection', () => {
+    it('should update projection data without changing last_event_id', async () => {
+      const projectionId = ulid();
+      const eventId = 123n;
+
+      await client.saveProjection({
+        type: 'test-projection',
+        id: projectionId,
+        data: { count: 1 },
+        eventId,
+      });
+
+      await client.forceUpdateProjection({
+        type: 'test-projection',
+        id: projectionId,
+        data: { count: 2 },
+      });
+
+      const result = await client.getProjection({
+        type: 'test-projection',
+        id: projectionId,
+      });
+
+      expect(result).toMatchObject({
+        type: 'test-projection',
+        id: projectionId,
+        data: { count: 2 },
+        lastEventId: eventId,
+      });
+    });
+  });
+
+  describe('conditionalUpdateProjection', () => {
+    it('should update when new event id is higher', async () => {
+      const projectionId = ulid();
+      const eventId1 = 123n;
+      const eventId2 = 124n;
+
+      await client.saveProjection({
+        type: 'test-projection',
+        id: projectionId,
+        data: { count: 1 },
+        eventId: eventId1,
+      });
+
+      await client.conditionalUpdateProjection({
+        type: 'test-projection',
+        id: projectionId,
+        data: { count: 2 },
+        eventId: eventId2,
+      });
+
+      const result = await client.getProjection({
+        type: 'test-projection',
+        id: projectionId,
+      });
+
+      expect(result).toMatchObject({
+        type: 'test-projection',
+        id: projectionId,
+        data: { count: 2 },
+        lastEventId: eventId2,
+      });
+    });
+
+    it('should throw when new event id is lower', async () => {
+      const projectionId = ulid();
+      const eventId1 = 123n;
+      const eventId2 = 124n;
+
+      await client.saveProjection({
+        type: 'test-projection',
+        id: projectionId,
+        data: { count: 1 },
+        eventId: eventId2, // Using higher ID first
+      });
+
+      await expect(
+        client.conditionalUpdateProjection({
+          type: 'test-projection',
+          id: projectionId,
+          data: { count: 2 },
+          eventId: eventId1, // Using lower ID
+        }),
+      ).rejects.toThrow('Concurrent modification detected');
+
+      const result = await client.getProjection({
+        type: 'test-projection',
+        id: projectionId,
+      });
+
+      expect(result).toMatchObject({
+        type: 'test-projection',
+        id: projectionId,
+        data: { count: 1 },
+        lastEventId: eventId2,
+      });
+    });
+  });
+
+  describe('getProjection', () => {
+    it('should return null when projection does not exist', async () => {
+      const projectionId = ulid();
+
+      const result = await client.getProjection({
+        type: 'test-projection',
+        id: projectionId,
+      });
+
+      expect(result).toBeNull();
+    });
+
+    it('should return projection when it exists', async () => {
+      const projectionId = ulid();
+      const eventId = 123n;
+
+      await client.saveProjection({
+        type: 'test-projection',
+        id: projectionId,
+        data: { count: 1 },
+        eventId,
+      });
+
+      const result = await client.getProjection({
+        type: 'test-projection',
+        id: projectionId,
+      });
+
+      expect(result).toMatchObject({
+        type: 'test-projection',
+        id: projectionId,
+        data: { count: 1 },
+        lastEventId: eventId,
+      });
+    });
+  });
+
+  describe('queryProjections', () => {
+    it('should find projections by type', async () => {
+      const testId = ulid();
+      const projectionId1 = ulid();
+      const projectionId2 = ulid();
+      const eventId1 = 123n;
+      const eventId2 = 124n;
+
+      await client.saveProjection({
+        type: `test-projection-type-${testId}`,
+        id: projectionId1,
+        data: { count: 1 },
+        eventId: eventId1,
+      });
+
+      await client.saveProjection({
+        type: `test-projection-other-${testId}`,
+        id: projectionId2,
+        data: { count: 2 },
+        eventId: eventId2,
+      });
+
+      const results = await client.queryProjections({
+        type: `test-projection-type-${testId}`,
+      });
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({
+        type: `test-projection-type-${testId}`,
+        id: projectionId1,
+        data: { count: 1 },
+      });
+    });
+
+    it('should filter by data fields', async () => {
+      const testId = ulid();
+      const projectionId1 = ulid();
+      const projectionId2 = ulid();
+      const eventId1 = 123n;
+      const eventId2 = 124n;
+
+      await client.saveProjection({
+        type: `test-projection-status-${testId}`,
+        id: projectionId1,
+        data: { count: 1, status: 'active' },
+        eventId: eventId1,
+      });
+
+      await client.saveProjection({
+        type: `test-projection-status-${testId}`,
+        id: projectionId2,
+        data: { count: 2, status: 'inactive' },
+        eventId: eventId2,
+      });
+
+      const results = await client.queryProjections({
+        type: `test-projection-status-${testId}`,
+        filter: { status: { eq: 'active' } },
+      });
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({
+        type: `test-projection-status-${testId}`,
+        id: projectionId1,
+        data: { count: 1, status: 'active' },
+      });
+    });
+
+    it('should filter by numeric fields', async () => {
+      const testId = ulid();
+      const projectionId1 = ulid();
+      const projectionId2 = ulid();
+      const eventId1 = 123n;
+      const eventId2 = 124n;
+
+      await client.saveProjection({
+        type: `test-projection-numeric-${testId}`,
+        id: projectionId1,
+        data: { value: 1 },
+        eventId: eventId1,
+      });
+
+      await client.saveProjection({
+        type: `test-projection-numeric-${testId}`,
+        id: projectionId2,
+        data: { value: 2 },
+        eventId: eventId2,
+      });
+
+      const results = await client.queryProjections({
+        type: `test-projection-numeric-${testId}`,
+        filter: { value: { eq: 1 } },
+      });
+
+      expect(results).toHaveLength(1);
+      expect(results[0]).toMatchObject({
+        type: `test-projection-numeric-${testId}`,
+        id: projectionId1,
+        data: { value: 1 },
+      });
     });
   });
 });

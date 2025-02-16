@@ -3,10 +3,7 @@ import { Knex } from 'knex';
 import { EventInput } from './event-schema';
 import { DataFilter, operatorMap, QueryOperators } from './query-types';
 
-export type EventClient<
-  TEventUnion extends z.ZodType,
-  TProjection extends Projection<string, unknown>,
-> = {
+export type EventClient<TEventUnion extends z.ZodType> = {
   saveEvent: <T extends z.infer<TEventUnion>['type']>(
     event: EventInput<Extract<z.infer<TEventUnion>, { type: T }>>,
   ) => Promise<Extract<z.infer<TEventUnion>, { type: T }>>;
@@ -21,14 +18,19 @@ export type EventClient<
   ) => Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>>;
   getEventStreams: <T extends z.infer<TEventUnion>['type']>(params: {
     streams: Array<{ types: T[]; filter?: DataFilter }>;
+    afterId?: bigint;
   }) => Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>>;
   saveProjection: (params: SaveProjectionParams) => Promise<void>;
   forceUpdateProjection: (params: UpdateProjectionParams) => Promise<void>;
   conditionalUpdateProjection: (
     params: ConditionalUpdateProjectionParams,
   ) => Promise<void>;
-  getProjection: (params: GetProjectionParams) => Promise<TProjection | null>;
-  queryProjections: (params: QueryProjectionsParams) => Promise<TProjection[]>;
+  getProjection: <TProjection extends Projection<string, unknown>>(
+    params: GetProjectionParams,
+  ) => Promise<TProjection | null>;
+  queryProjections: <TProjection extends Projection<string, unknown>>(
+    params: QueryProjectionsParams,
+  ) => Promise<TProjection[]>;
   saveEventWithStreamValidation: <T extends z.infer<TEventUnion>['type']>(
     params: SaveEventWithValidationParams<
       EventInput<Extract<z.infer<TEventUnion>, { type: T }>>
@@ -42,7 +44,7 @@ export type EventClient<
 };
 
 export type Event<EType extends string, EData> = {
-  id: string;
+  id: bigint;
   type: EType;
   data: EData;
   timestamp: number;
@@ -52,7 +54,7 @@ export type Projection<PType extends string, PData> = {
   id: string;
   type: PType;
   data: PData;
-  lastEventId: string;
+  lastEventId: bigint;
 };
 
 type GetLatestEventParams<T extends string = string> = {
@@ -63,13 +65,14 @@ type GetLatestEventParams<T extends string = string> = {
 type GetEventStreamParams<T extends string = string> = {
   types: T[];
   filter?: DataFilter;
+  afterId?: bigint;
 };
 
 type SaveProjectionParams = {
   type: string;
   id: string;
   data: unknown;
-  eventId: string;
+  eventId: bigint;
 };
 
 type UpdateProjectionParams = {
@@ -79,7 +82,7 @@ type UpdateProjectionParams = {
 };
 
 type ConditionalUpdateProjectionParams = UpdateProjectionParams & {
-  eventId: string;
+  eventId: bigint;
 };
 
 type GetProjectionParams = {
@@ -89,7 +92,7 @@ type GetProjectionParams = {
 
 type QueryProjectionsParams = {
   type: string;
-  filter?: Record<string, unknown>;
+  filter?: DataFilter;
 };
 
 type SaveEventWithValidationParams<TEvent> = {
@@ -153,12 +156,11 @@ const applyDataFilters = (query: Knex.QueryBuilder, filter?: DataFilter) => {
 export const createEventClient = <
   TEventUnion extends z.ZodType,
   TEventInputUnion extends z.ZodType,
-  TProjection extends Projection<string, unknown>,
 >(
   eventUnion: TEventUnion,
   inputUnion: TEventInputUnion,
   knex: Knex,
-): EventClient<TEventUnion, TProjection> => {
+): EventClient<TEventUnion> => {
   return {
     saveEvent: async (event) => {
       // Validate the input
@@ -211,6 +213,10 @@ export const createEventClient = <
     getEventStream: async (params) => {
       let query = knex('events').whereIn('type', params.types);
 
+      if (params.afterId) {
+        query = query.where('id', '>', params.afterId.toString());
+      }
+
       query = applyDataFilters(query, params.filter);
       query = query.orderBy('id', 'asc');
 
@@ -220,8 +226,13 @@ export const createEventClient = <
 
     getEventStreams: async <T extends z.infer<TEventUnion>['type']>(params: {
       streams: Array<{ types: T[]; filter?: DataFilter }>;
+      afterId?: bigint;
     }): Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>> => {
       let query = knex('events').distinctOn('id');
+
+      if (params.afterId) {
+        query = query.where('id', '>', params.afterId.toString());
+      }
 
       // Build OR conditions for each stream
       query = query.where((builder) => {
@@ -240,26 +251,87 @@ export const createEventClient = <
       return events.map((event) => eventUnion.parse(event));
     },
 
-    saveProjection: async (_params) => {
-      // Save/update projection conditionally based on event ID
+    saveProjection: async (params) => {
+      await knex('projections')
+        .insert({
+          type: params.type,
+          id: params.id,
+          data: params.data,
+          latest_event_id: params.eventId.toString(),
+        })
+        .onConflict(['type', 'id'])
+        .merge({
+          data: params.data,
+          latest_event_id: params.eventId.toString(),
+          updated_at: knex.fn.now(),
+        });
     },
 
-    forceUpdateProjection: async (_params) => {
-      // Update projection unconditionally
+    forceUpdateProjection: async (params) => {
+      await knex('projections')
+        .where({
+          type: params.type,
+          id: params.id,
+        })
+        .update({
+          data: params.data,
+          updated_at: knex.fn.now(),
+        });
     },
 
-    conditionalUpdateProjection: async (_params) => {
-      // Update projection if new event ID is more recent
+    conditionalUpdateProjection: async (params) => {
+      const result = await knex('projections')
+        .insert({
+          type: params.type,
+          id: params.id,
+          data: params.data,
+          latest_event_id: params.eventId.toString(),
+        })
+        .onConflict(['type', 'id'])
+        .merge()
+        .where(
+          knex.raw('projections.latest_event_id < ?', [
+            params.eventId.toString(),
+          ]),
+        )
+        .returning('id');
+
+      if (!result?.length) {
+        throw new Error('Concurrent modification detected');
+      }
     },
 
-    getProjection: async (_params) => {
-      // Get single projection by type and ID
-      return null;
+    getProjection: async <TProjection extends Projection<string, unknown>>(
+      params: GetProjectionParams,
+    ) => {
+      const result = await knex('projections')
+        .where('type', params.type)
+        .where('id', params.id)
+        .first();
+
+      if (!result) return null;
+
+      const projection = {
+        id: result.id,
+        type: result.type,
+        data: result.data,
+        lastEventId: BigInt(result.latest_event_id),
+      } as TProjection;
+
+      return projection;
     },
 
-    queryProjections: async (_params) => {
-      // Search projections by type with optional filtering
-      return [];
+    queryProjections: async <TProjection extends Projection<string, unknown>>(
+      params: QueryProjectionsParams,
+    ) => {
+      let query = knex('projections').where('type', params.type);
+      query = applyDataFilters(query, params.filter);
+
+      const results = await query.select('*');
+      return results.map((result) => ({
+        ...result,
+        lastEventId: BigInt(result.latest_event_id),
+      })) as TProjection[];
     },
 
     saveEventWithStreamValidation: async <

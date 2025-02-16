@@ -27,12 +27,13 @@ export const createEventsTableMigration: Migration = {
 export const createProjectionsTableMigration: Migration = {
   up: `
     CREATE TABLE IF NOT EXISTS projections (
-      id TEXT PRIMARY KEY,
-      latest_event_id BIGINT NOT NULL,
+      id TEXT NOT NULL,
       type TEXT NOT NULL,
+      latest_event_id BIGINT NOT NULL,
       data JSONB NOT NULL,
       created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY(type, id)
     );
     CREATE INDEX IF NOT EXISTS projections_type_idx ON projections(type);
     CREATE INDEX IF NOT EXISTS projections_latest_event_id_idx ON projections(latest_event_id);

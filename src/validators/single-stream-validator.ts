@@ -3,23 +3,15 @@ import { EventClient } from '../event-client';
 import { DataFilter } from '../query-types';
 import type { EventInput } from '../event-schema';
 
-export abstract class SingleStreamValidator<
-  TEventUnion extends z.ZodType,
-  TProjection extends {
-    id: string;
-    type: string;
-    data: unknown;
-    lastEventId: string;
-  },
-> {
-  protected eventClient: EventClient<TEventUnion, TProjection>;
+export abstract class SingleStreamValidator<TEventUnion extends z.ZodType> {
+  protected eventClient: EventClient<TEventUnion>;
   protected types: Array<z.infer<TEventUnion>['type']>;
   protected filter?: DataFilter;
   private cachedEventsPromise?: Promise<Array<z.infer<TEventUnion>>>;
   private appliedEvents: Array<z.infer<TEventUnion>> = [];
 
   constructor(
-    eventClient: EventClient<TEventUnion, TProjection>,
+    eventClient: EventClient<TEventUnion>,
     types: Array<z.infer<TEventUnion>['type']>,
     filter?: DataFilter,
   ) {

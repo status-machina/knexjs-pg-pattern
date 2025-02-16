@@ -8,24 +8,13 @@ type StreamConfig = {
   filter?: DataFilter;
 };
 
-export abstract class MultiStreamValidator<
-  TEventUnion extends z.ZodType,
-  TProjection extends {
-    id: string;
-    type: string;
-    data: unknown;
-    lastEventId: string;
-  },
-> {
-  protected eventClient: EventClient<TEventUnion, TProjection>;
+export abstract class MultiStreamValidator<TEventUnion extends z.ZodType> {
+  protected eventClient: EventClient<TEventUnion>;
   protected streams: StreamConfig[];
   private cachedEventsPromise?: Promise<Array<z.infer<TEventUnion>>>;
   private appliedEvents: Array<z.infer<TEventUnion>> = [];
 
-  constructor(
-    eventClient: EventClient<TEventUnion, TProjection>,
-    streams: StreamConfig[],
-  ) {
+  constructor(eventClient: EventClient<TEventUnion>, streams: StreamConfig[]) {
     this.eventClient = eventClient;
     this.streams = streams;
   }
