@@ -14,7 +14,8 @@
     "typecheck": "npm run build && tsc --noEmit",
     "wait-for-db": "node scripts/wait-for-db.js",
     "format": "prettier --write .",
-    "lint": "eslint . --ext .ts --fix"
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix"
   },
   "keywords": [
     "knex",

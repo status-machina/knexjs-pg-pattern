@@ -21,6 +21,7 @@ export const eventInputBaseSchema = z.object({
 });
 
 // Helper to create consistent event schemas
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const createEventSchema = <T extends string, D extends z.ZodObject<any>>(
   type: T,
   dataSchema: D,
@@ -33,6 +34,7 @@ export const createEventSchema = <T extends string, D extends z.ZodObject<any>>(
 
 export const createEventInputSchema = <
   T extends string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   D extends z.ZodObject<any>,
 >(
   type: T,
@@ -63,6 +65,7 @@ export type EventRegistry<
   [K in T[number]['type']]: InferEventType<Extract<T[number], { type: K }>>;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyEvent<R extends EventRegistry<any>> = R[keyof R];
 
 export const createEventDefinition = <T extends string, D extends z.ZodType>(

@@ -41,14 +41,14 @@ export type EventClient<
   ) => Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>>;
 };
 
-export type Event<EType extends string, EData extends unknown> = {
+export type Event<EType extends string, EData> = {
   id: string;
   type: EType;
   data: EData;
   timestamp: number;
 };
 
-export type Projection<PType extends string, PData extends unknown> = {
+export type Projection<PType extends string, PData> = {
   id: string;
   type: PType;
   data: PData;
@@ -115,7 +115,7 @@ const applyDataFilters = (query: Knex.QueryBuilder, filter?: DataFilter) => {
 
   for (const [field, operators] of Object.entries(filter)) {
     for (const [op, value] of Object.entries(operators)) {
-      const sqlOperator = operatorMap[op as keyof QueryOperators<any>];
+      const sqlOperator = operatorMap[op as keyof QueryOperators<unknown>];
 
       if (!sqlOperator) {
         throw new Error(`Unknown operator: ${op}`);
@@ -225,7 +225,7 @@ export const createEventClient = <
 
       // Build OR conditions for each stream
       query = query.where((builder) => {
-        params.streams.forEach((stream, index) => {
+        params.streams.forEach((stream) => {
           builder.orWhere((subBuilder) => {
             subBuilder.whereIn('type', stream.types);
             applyDataFilters(subBuilder, stream.filter);
@@ -240,24 +240,24 @@ export const createEventClient = <
       return events.map((event) => eventUnion.parse(event));
     },
 
-    saveProjection: async (params) => {
+    saveProjection: async (_params) => {
       // Save/update projection conditionally based on event ID
     },
 
-    forceUpdateProjection: async (params) => {
+    forceUpdateProjection: async (_params) => {
       // Update projection unconditionally
     },
 
-    conditionalUpdateProjection: async (params) => {
+    conditionalUpdateProjection: async (_params) => {
       // Update projection if new event ID is more recent
     },
 
-    getProjection: async (params) => {
+    getProjection: async (_params) => {
       // Get single projection by type and ID
       return null;
     },
 
-    queryProjections: async (params) => {
+    queryProjections: async (_params) => {
       // Search projections by type with optional filtering
       return [];
     },

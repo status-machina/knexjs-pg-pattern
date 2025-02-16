@@ -1,5 +1,3 @@
-import type { Knex } from 'knex';
-
 export type QueryOperators<T> = {
   eq?: T;
   neq?: T;
@@ -15,14 +13,7 @@ export type DataFilter = {
   [key: string]: QueryOperators<string | number | boolean>;
 };
 
-type QueryBuilder = {
-  whereData: (
-    field: string,
-    operator: keyof QueryOperators<any>,
-    value: any,
-  ) => Knex.QueryBuilder;
-};
-
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const operatorMap: Record<keyof QueryOperators<any>, string> = {
   eq: '=',
   neq: '!=',

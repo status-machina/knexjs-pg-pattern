@@ -77,7 +77,8 @@ describe('EventClient', () => {
         },
       ]);
 
-      const name = events[0].data.name;
+      // This is a test to ensure that the type inference is working
+      const _name = events[0].data.name;
 
       const latestEvent = await client.getLatestEvent({
         type: eventTypes.LIST_CREATED,

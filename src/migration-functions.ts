@@ -37,7 +37,7 @@ export const createProjectionsTableMigration: Migration = {
     CREATE INDEX IF NOT EXISTS projections_type_idx ON projections(type);
     CREATE INDEX IF NOT EXISTS projections_latest_event_id_idx ON projections(latest_event_id);
   `,
-  down: `DROP TABLE IF EXISTS projections;`,
+  down: 'DROP TABLE IF EXISTS projections;',
 };
 
 type CreateDataIndexParams = {
