@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createEventClient } from '../../../src';
+import { createEventClient } from '@status-machina/knexjs-pg-pattern';
 import { eventUnion, eventInputUnion, eventTypes } from '../events';
 import { db } from '../db';
 import { CompleteItemValidator } from './complete-item.validator';

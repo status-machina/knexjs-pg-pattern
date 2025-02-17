@@ -12,3 +12,4 @@ export {
   createEventDataIndexMigration,
   createProjectionDataIndexMigration,
 } from './migration-functions';
+export { createEventSchema, createEventInputSchema } from './event-schema';

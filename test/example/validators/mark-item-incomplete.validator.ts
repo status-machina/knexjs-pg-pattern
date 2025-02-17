@@ -1,6 +1,6 @@
-import { SingleStreamValidator } from '../../../src/validators';
+import { SingleStreamValidator } from '@status-machina/knexjs-pg-pattern';
 import { eventUnion, eventTypes, UserEvent, eventInputUnion } from '../events';
-import type { EventClient } from '../../../src';
+import type { EventClient } from '@status-machina/knexjs-pg-pattern';
 
 type CompletionStatus = 'complete' | 'incomplete' | undefined;
 

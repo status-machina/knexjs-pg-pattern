@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createEventClient } from '../dist';
+import { createEventClient } from '@status-machina/knexjs-pg-pattern';
 import {
   eventUnion,
   eventInputUnion,
@@ -221,33 +221,41 @@ describe.concurrent('EventClient', () => {
     it('should handle string equality operators correctly', async () => {
       const client = createEventClient(eventUnion, eventInputUnion, knex);
       const testId = ulid();
-      const listId1 = ulid();
-      const listId2 = ulid();
-      const name1 = `List A ${testId}`;
-      const name2 = `List B ${testId}`;
+      const value1 = `Value A ${testId}`;
+      const value2 = `Value B ${testId}`;
 
       await client.saveEvents([
         {
-          type: eventTypes.LIST_CREATED,
-          data: { listId: listId1, name: name1, tenantId: testId },
+          type: eventTypes.EXAMPLE_EVENT,
+          data: {
+            tenantId: testId,
+            stringField: value1,
+            numberField: 1,
+            booleanField: true,
+          },
         },
         {
-          type: eventTypes.LIST_CREATED,
-          data: { listId: listId2, name: name2, tenantId: testId },
+          type: eventTypes.EXAMPLE_EVENT,
+          data: {
+            tenantId: testId,
+            stringField: value2,
+            numberField: 2,
+            booleanField: false,
+          },
         },
       ]);
 
       const eqEvent = await client.getLatestEvent({
-        type: eventTypes.LIST_CREATED,
-        filter: { name: { eq: name2 }, tenantId: { eq: testId } },
+        type: eventTypes.EXAMPLE_EVENT,
+        filter: { stringField: { eq: value2 }, tenantId: { eq: testId } },
       });
-      expect(eqEvent?.data.name).toBe(name2);
+      expect(eqEvent?.data.stringField).toBe(value2);
 
       const neqEvent = await client.getLatestEvent({
-        type: eventTypes.LIST_CREATED,
-        filter: { name: { neq: name1 }, tenantId: { eq: testId } },
+        type: eventTypes.EXAMPLE_EVENT,
+        filter: { stringField: { neq: value1 }, tenantId: { eq: testId } },
       });
-      expect(neqEvent?.data.name).toBe(name2);
+      expect(neqEvent?.data.stringField).toBe(value2);
     });
 
     it('should handle array operators correctly', async () => {
@@ -293,50 +301,109 @@ describe.concurrent('EventClient', () => {
 
     it('should handle numeric comparison operators correctly', async () => {
       const client = createEventClient(eventUnion, eventInputUnion, knex);
-      const listId = ulid();
-      const itemId1 = ulid();
-      const itemId2 = ulid();
-      const itemId3 = ulid();
       const testId = ulid();
 
       await client.saveEvents([
         {
-          type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId, itemId: itemId1, priority: 5, tenantId: testId },
+          type: eventTypes.EXAMPLE_EVENT,
+          data: {
+            tenantId: testId,
+            stringField: 'test1',
+            numberField: 5,
+            booleanField: true,
+          },
         },
         {
-          type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId, itemId: itemId2, priority: 10, tenantId: testId },
+          type: eventTypes.EXAMPLE_EVENT,
+          data: {
+            tenantId: testId,
+            stringField: 'test2',
+            numberField: 10,
+            booleanField: false,
+          },
         },
         {
-          type: eventTypes.ITEM_PRIORITY_SET,
-          data: { listId, itemId: itemId3, priority: 15, tenantId: testId },
+          type: eventTypes.EXAMPLE_EVENT,
+          data: {
+            tenantId: testId,
+            stringField: 'test3',
+            numberField: 15,
+            booleanField: true,
+          },
         },
       ]);
 
       const gtEvent = await client.getLatestEvent({
-        type: eventTypes.ITEM_PRIORITY_SET,
-        filter: { priority: { gt: 12 }, tenantId: { eq: testId } },
+        type: eventTypes.EXAMPLE_EVENT,
+        filter: { numberField: { gt: 12 }, tenantId: { eq: testId } },
       });
-      expect(gtEvent?.data.itemId).toBe(itemId3);
+      expect(gtEvent?.data.numberField).toBe(15);
 
       const gteEvent = await client.getLatestEvent({
-        type: eventTypes.ITEM_PRIORITY_SET,
-        filter: { priority: { gte: 10 }, tenantId: { eq: testId } },
+        type: eventTypes.EXAMPLE_EVENT,
+        filter: { numberField: { gte: 10 }, tenantId: { eq: testId } },
       });
-      expect([itemId2, itemId3]).toContain(gteEvent?.data.itemId);
+      expect([10, 15]).toContain(gteEvent?.data.numberField);
 
       const ltEvent = await client.getLatestEvent({
-        type: eventTypes.ITEM_PRIORITY_SET,
-        filter: { priority: { lt: 7 }, tenantId: { eq: testId } },
+        type: eventTypes.EXAMPLE_EVENT,
+        filter: { numberField: { lt: 7 }, tenantId: { eq: testId } },
       });
-      expect(ltEvent?.data.itemId).toBe(itemId1);
+      expect(ltEvent?.data.numberField).toBe(5);
 
       const lteEvent = await client.getLatestEvent({
-        type: eventTypes.ITEM_PRIORITY_SET,
-        filter: { priority: { lte: 10 }, tenantId: { eq: testId } },
+        type: eventTypes.EXAMPLE_EVENT,
+        filter: { numberField: { lte: 10 }, tenantId: { eq: testId } },
       });
-      expect([itemId1, itemId2]).toContain(lteEvent?.data.itemId);
+      expect([5, 10]).toContain(lteEvent?.data.numberField);
+    });
+
+    it('should handle boolean filters correctly', async () => {
+      const client = createEventClient(eventUnion, eventInputUnion, knex);
+      const testId = ulid();
+
+      await client.saveEvents([
+        {
+          type: eventTypes.EXAMPLE_EVENT,
+          data: {
+            tenantId: testId,
+            stringField: 'test1',
+            numberField: 1,
+            booleanField: true,
+          },
+        },
+        {
+          type: eventTypes.EXAMPLE_EVENT,
+          data: {
+            tenantId: testId,
+            stringField: 'test2',
+            numberField: 2,
+            booleanField: false,
+          },
+        },
+      ]);
+
+      const trueEvents = await client.getEventStream({
+        types: [eventTypes.EXAMPLE_EVENT],
+        filter: {
+          booleanField: { eq: true },
+          tenantId: { eq: testId },
+        },
+      });
+
+      expect(trueEvents).toHaveLength(1);
+      expect(trueEvents[0].data.booleanField).toBe(true);
+
+      const falseEvents = await client.getEventStream({
+        types: [eventTypes.EXAMPLE_EVENT],
+        filter: {
+          booleanField: { eq: false },
+          tenantId: { eq: testId },
+        },
+      });
+
+      expect(falseEvents).toHaveLength(1);
+      expect(falseEvents[0].data.booleanField).toBe(false);
     });
 
     it('should handle multiple filters correctly', async () => {
@@ -528,6 +595,60 @@ describe.concurrent('EventClient', () => {
       expect(events[0].type).toBe(eventTypes.ITEM_PRIORITY_SET);
       expect(events[1].type).toBe(eventTypes.ITEM_COMPLETED);
     });
+
+    it('should reject unknown operators', async () => {
+      const client = createEventClient(eventUnion, eventInputUnion, knex);
+      const testId = ulid();
+
+      type InvalidOperator = { invalid_op: string };
+      await expect(
+        client.getEventStream({
+          types: [eventTypes.LIST_CREATED],
+          filter: {
+            tenantId: { invalid_op: testId } as unknown as InvalidOperator,
+          },
+        }),
+      ).rejects.toThrow('Unknown operator: invalid_op');
+    });
+
+    it('should handle boolean filters correctly', async () => {
+      const client = createEventClient(eventUnion, eventInputUnion, knex);
+      const listId = ulid();
+      const itemId = ulid();
+      const testId = ulid();
+
+      await client.saveEvents([
+        {
+          type: eventTypes.ITEM_COMPLETED,
+          data: {
+            listId,
+            itemId,
+            tenantId: testId,
+          },
+        },
+        {
+          type: eventTypes.ITEM_MARKED_INCOMPLETE,
+          data: {
+            listId,
+            itemId,
+            tenantId: testId,
+          },
+        },
+      ]);
+
+      const events = await client.getEventStream({
+        types: [eventTypes.ITEM_COMPLETED, eventTypes.ITEM_MARKED_INCOMPLETE],
+        filter: {
+          listId: { eq: listId },
+          itemId: { eq: itemId },
+          tenantId: { eq: testId },
+        },
+      });
+
+      expect(events).toHaveLength(2);
+      expect(events[0].type).toBe(eventTypes.ITEM_COMPLETED);
+      expect(events[1].type).toBe(eventTypes.ITEM_MARKED_INCOMPLETE);
+    });
   });
 
   describe.concurrent('getEventStreams', () => {
@@ -634,6 +755,63 @@ describe.concurrent('EventClient', () => {
       expect(eventIds).toEqual(uniqueEventIds);
       expect(events[0].type).toBe(eventTypes.ITEM_PRIORITY_SET);
       expect(events[1].type).toBe(eventTypes.ITEM_COMPLETED);
+    });
+
+    it('should only return events after the specified afterId', async () => {
+      const client = createEventClient(eventUnion, eventInputUnion, knex);
+      const listId = ulid();
+      const itemId = ulid();
+      const testId = ulid();
+
+      const events = await client.saveEvents([
+        {
+          type: eventTypes.LIST_CREATED,
+          data: { listId, name: 'List 1', tenantId: testId },
+        },
+        {
+          type: eventTypes.ITEM_PRIORITY_SET,
+          data: { listId, itemId, priority: 5, tenantId: testId },
+        },
+        {
+          type: eventTypes.ITEM_COMPLETED,
+          data: { listId, itemId, tenantId: testId },
+        },
+      ]);
+
+      const afterSecondEvent = await client.getEventStreams({
+        streams: [
+          {
+            types: [
+              eventTypes.LIST_CREATED,
+              eventTypes.ITEM_PRIORITY_SET,
+              eventTypes.ITEM_COMPLETED,
+            ],
+            filter: { listId: { eq: listId }, tenantId: { eq: testId } },
+          },
+        ],
+        afterId: events[1].id,
+      });
+
+      expect(afterSecondEvent).toHaveLength(1);
+      expect(afterSecondEvent[0].type).toBe(eventTypes.ITEM_COMPLETED);
+
+      const afterFirstEvent = await client.getEventStreams({
+        streams: [
+          {
+            types: [
+              eventTypes.LIST_CREATED,
+              eventTypes.ITEM_PRIORITY_SET,
+              eventTypes.ITEM_COMPLETED,
+            ],
+            filter: { listId: { eq: listId }, tenantId: { eq: testId } },
+          },
+        ],
+        afterId: events[0].id,
+      });
+
+      expect(afterFirstEvent).toHaveLength(2);
+      expect(afterFirstEvent[0].type).toBe(eventTypes.ITEM_PRIORITY_SET);
+      expect(afterFirstEvent[1].type).toBe(eventTypes.ITEM_COMPLETED);
     });
   });
 
@@ -828,6 +1006,80 @@ describe.concurrent('EventClient', () => {
           ],
         }),
       ).rejects.toThrow('Concurrent modification detected');
+    });
+  });
+
+  describe.concurrent('saveEvents', () => {
+    it('should handle database errors', async () => {
+      type MockTransaction = {
+        (tableName: string): {
+          insert: (data: unknown[]) => {
+            returning: (fields: string[]) => Promise<never>;
+          };
+        };
+      };
+      type TransactionCallback = (trx: MockTransaction) => Promise<unknown>;
+      const mockKnex = {
+        transaction: (fn: TransactionCallback) =>
+          fn((_tableName: string) => ({
+            insert: () => ({
+              returning: () => Promise.reject(new Error('Database error')),
+            }),
+          })),
+      } as unknown as Knex;
+      const client = createEventClient(eventUnion, eventInputUnion, mockKnex);
+      const testId = ulid();
+
+      await expect(
+        client.saveEvents([
+          {
+            type: eventTypes.EXAMPLE_EVENT,
+            data: {
+              tenantId: testId,
+              stringField: 'test',
+              numberField: 1,
+              booleanField: true,
+            },
+          },
+        ]),
+      ).rejects.toThrow('Database error');
+    });
+
+    it('should reject invalid event type', async () => {
+      const client = createEventClient(eventUnion, eventInputUnion, knex);
+      const testId = ulid();
+
+      type InvalidEvent = { type: string; data: { tenantId: string } };
+      await expect(
+        client.saveEvents([
+          {
+            type: 'INVALID_EVENT_TYPE',
+            data: {
+              tenantId: testId,
+            },
+          } as InvalidEvent,
+        ]),
+      ).rejects.toThrow();
+    });
+
+    it('should reject invalid event data structure', async () => {
+      const client = createEventClient(eventUnion, eventInputUnion, knex);
+      const testId = ulid();
+
+      type InvalidExampleEvent = {
+        type: typeof eventTypes.EXAMPLE_EVENT;
+        data: { tenantId: string };
+      };
+      await expect(
+        client.saveEvents([
+          {
+            type: eventTypes.EXAMPLE_EVENT,
+            data: {
+              tenantId: testId,
+            },
+          } as InvalidExampleEvent,
+        ]),
+      ).rejects.toThrow();
     });
   });
 });

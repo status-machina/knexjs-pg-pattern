@@ -1,6 +1,9 @@
 import { z } from 'zod';
-import { UserEvent, UserEventInput, eventTypes } from '../events';
-import { SingleStreamProjection, EventClient } from '../../../dist';
+import { eventTypes, UserEvent } from '../events';
+import {
+  SingleStreamProjection,
+  EventClient,
+} from '@status-machina/knexjs-pg-pattern';
 
 const listSchema = z.object({
   listId: z.string(),

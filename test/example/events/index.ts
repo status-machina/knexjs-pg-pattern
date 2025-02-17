@@ -34,6 +34,11 @@ import {
   itemMarkedIncompleteInputSchema,
   ITEM_MARKED_INCOMPLETE,
 } from './item-marked-incomplete';
+import {
+  exampleEventSchema,
+  exampleEventInputSchema,
+  EXAMPLE_EVENT,
+} from './example-event';
 
 export const eventTypes = {
   LIST_CREATED,
@@ -43,6 +48,7 @@ export const eventTypes = {
   ITEM_REMOVED,
   ITEM_COMPLETED,
   ITEM_MARKED_INCOMPLETE,
+  EXAMPLE_EVENT,
 } as const;
 
 export type EventType = (typeof eventTypes)[keyof typeof eventTypes];
@@ -63,6 +69,7 @@ export const eventUnion = z.discriminatedUnion('type', [
   itemRemovedSchema,
   itemCompletedSchema,
   itemMarkedIncompleteSchema,
+  exampleEventSchema,
 ]);
 
 export const eventInputUnion = z.discriminatedUnion('type', [
@@ -73,6 +80,7 @@ export const eventInputUnion = z.discriminatedUnion('type', [
   itemRemovedInputSchema,
   itemCompletedInputSchema,
   itemMarkedIncompleteInputSchema,
+  exampleEventInputSchema,
 ]);
 
 export type UserEvent = z.infer<typeof eventUnion>;

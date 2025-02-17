@@ -2,7 +2,7 @@ import { z } from 'zod';
 import {
   createEventSchema,
   createEventInputSchema,
-} from '../../../src/event-schema';
+} from '@status-machina/knexjs-pg-pattern';
 
 export const ITEM_REMOVED = 'ITEM_REMOVED' as const;
 

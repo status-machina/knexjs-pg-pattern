@@ -2,7 +2,7 @@ import { z } from 'zod';
 import {
   createEventSchema,
   createEventInputSchema,
-} from '../../../src/event-schema';
+} from '@status-machina/knexjs-pg-pattern';
 
 export const ITEM_COMPLETED = 'ITEM_COMPLETED' as const;
 

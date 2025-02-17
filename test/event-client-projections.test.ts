@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { createEventClient } from '../dist';
+import { createEventClient } from '@status-machina/knexjs-pg-pattern';
 import { eventUnion, eventInputUnion, eventTypes } from './example/events';
 import { db } from './example/db';
 import { ulid } from 'ulidx';
