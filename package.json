@@ -4,6 +4,9 @@
   "description": "Event sourcing pattern for PostgreSQL in KnexJS",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "test": "fun() { npm run build && npm run test:setup && vitest --run --pool=threads --no-isolate \"$@\" && npm run test:teardown; }; fun",
