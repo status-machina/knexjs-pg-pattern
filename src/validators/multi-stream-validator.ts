@@ -8,13 +8,19 @@ type StreamConfig = {
   filter?: DataFilter;
 };
 
-export abstract class MultiStreamValidator<TEventUnion extends z.ZodType> {
-  protected eventClient: EventClient<TEventUnion>;
+export abstract class MultiStreamValidator<
+  TEventUnion extends z.ZodType,
+  TEventInputUnion extends z.ZodType,
+> {
+  protected eventClient: EventClient<TEventUnion, TEventInputUnion>;
   protected streams: StreamConfig[];
   private cachedEventsPromise?: Promise<Array<z.infer<TEventUnion>>>;
   private appliedEvents: Array<z.infer<TEventUnion>> = [];
 
-  constructor(eventClient: EventClient<TEventUnion>, streams: StreamConfig[]) {
+  constructor(
+    eventClient: EventClient<TEventUnion, TEventInputUnion>,
+    streams: StreamConfig[],
+  ) {
     this.eventClient = eventClient;
     this.streams = streams;
   }
@@ -27,7 +33,7 @@ export abstract class MultiStreamValidator<TEventUnion extends z.ZodType> {
     }
 
     const cachedEvents = await this.cachedEventsPromise;
-    return [...cachedEvents, ...this.appliedEvents];
+    return [...(cachedEvents ?? []), ...this.appliedEvents];
   }
 
   protected async reduceOnlyDbEvents<T>(
@@ -40,7 +46,7 @@ export abstract class MultiStreamValidator<TEventUnion extends z.ZodType> {
       });
     }
     const cachedEvents = await this.cachedEventsPromise;
-    return cachedEvents.reduce(reducer, defaultValue);
+    return (cachedEvents ?? []).reduce(reducer, defaultValue);
   }
 
   protected async reduceEvents<T>(

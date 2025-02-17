@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { UserEvent, eventTypes } from '../events';
+import { UserEvent, UserEventInput, eventTypes } from '../events';
 import { SingleStreamProjection, EventClient } from '../../../dist';
 
 const listSchema = z.object({
@@ -129,13 +129,14 @@ const toNextState = (state: ListJson, event: UserEvent): ListJson => ({
 
 export class ListProjection extends SingleStreamProjection<
   z.ZodType<UserEvent>,
+  z.ZodType<UserEventInput>,
   z.ZodType<ListJson>
 > {
   readonly _id: string;
   readonly jsonSchema = listSchema;
 
   constructor(
-    eventClient: EventClient<z.ZodType<UserEvent>>,
+    eventClient: EventClient<z.ZodType<UserEvent>, z.ZodType<UserEventInput>>,
     listId: string,
     options: { loadExisting?: boolean } = {},
   ) {

@@ -1,5 +1,5 @@
 import { SingleStreamValidator } from '../../../src/validators';
-import { eventUnion, eventTypes, UserEvent } from '../events';
+import { eventUnion, eventTypes, UserEvent, eventInputUnion } from '../events';
 import type { EventClient } from '../../../src';
 
 type CompletionStatus = 'complete' | 'incomplete' | undefined;
@@ -32,10 +32,11 @@ const toPresentInList = (status: boolean, event: UserEvent): boolean => {
 };
 
 export class CompleteItemValidator extends SingleStreamValidator<
-  typeof eventUnion
+  typeof eventUnion,
+  typeof eventInputUnion
 > {
   constructor(
-    eventClient: EventClient<typeof eventUnion>,
+    eventClient: EventClient<typeof eventUnion, typeof eventInputUnion>,
     listId: string,
     itemId: string,
   ) {

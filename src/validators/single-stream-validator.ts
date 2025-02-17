@@ -3,15 +3,18 @@ import { EventClient } from '../event-client';
 import { DataFilter } from '../query-types';
 import type { EventInput } from '../event-schema';
 
-export abstract class SingleStreamValidator<TEventUnion extends z.ZodType> {
-  protected eventClient: EventClient<TEventUnion>;
+export abstract class SingleStreamValidator<
+  TEventUnion extends z.ZodType,
+  TEventInputUnion extends z.ZodType,
+> {
+  protected eventClient: EventClient<TEventUnion, TEventInputUnion>;
   protected types: Array<z.infer<TEventUnion>['type']>;
   protected filter?: DataFilter;
   private cachedEventsPromise?: Promise<Array<z.infer<TEventUnion>>>;
   private appliedEvents: Array<z.infer<TEventUnion>> = [];
 
   constructor(
-    eventClient: EventClient<TEventUnion>,
+    eventClient: EventClient<TEventUnion, TEventInputUnion>,
     types: Array<z.infer<TEventUnion>['type']>,
     filter?: DataFilter,
   ) {
@@ -29,7 +32,7 @@ export abstract class SingleStreamValidator<TEventUnion extends z.ZodType> {
     }
 
     const cachedEvents = await this.cachedEventsPromise;
-    return [...cachedEvents, ...this.appliedEvents];
+    return [...(cachedEvents ?? []), ...this.appliedEvents];
   }
 
   protected async reduceOnlyDbEvents<T>(
@@ -43,7 +46,7 @@ export abstract class SingleStreamValidator<TEventUnion extends z.ZodType> {
       });
     }
     const cachedEvents = await this.cachedEventsPromise;
-    return cachedEvents.reduce(reducer, defaultValue);
+    return (cachedEvents ?? []).reduce(reducer, defaultValue);
   }
 
   protected async reduceEvents<T>(

@@ -5,9 +5,10 @@ import type { EventInput } from '../event-schema';
 
 export abstract class SingleStreamProjection<
   TEventUnion extends z.ZodType,
+  TEventInputUnion extends z.ZodType,
   TJson extends z.ZodType,
 > {
-  protected eventClient: EventClient<TEventUnion>;
+  protected eventClient: EventClient<TEventUnion, TEventInputUnion>;
   private cachedEventsPromise?: Promise<Array<z.infer<TEventUnion>>>;
   private appliedEvents: Array<z.infer<TEventUnion>> = [];
   private existingProjectionPromise?: Promise<{
@@ -23,7 +24,7 @@ export abstract class SingleStreamProjection<
   abstract get filter(): DataFilter | undefined;
 
   constructor(
-    eventClient: EventClient<TEventUnion>,
+    eventClient: EventClient<TEventUnion, TEventInputUnion>,
     options: { loadExisting?: boolean } = {},
   ) {
     this.eventClient = eventClient;
@@ -44,7 +45,7 @@ export abstract class SingleStreamProjection<
             .then((projection) =>
               projection
                 ? {
-                    data: projection.data as z.infer<TJson>,
+                    data: this.jsonSchema.parse(projection.data),
                     lastEventId: projection.lastEventId,
                   }
                 : null,
@@ -54,9 +55,9 @@ export abstract class SingleStreamProjection<
     return this.existingProjectionPromise;
   }
 
-  protected async getExistingState(): Promise<z.infer<TJson> | undefined> {
+  protected async getExistingState(): Promise<z.infer<TJson> | null> {
     const projection = await this.loadExistingProjection();
-    return projection?.data;
+    return projection?.data ?? null;
   }
 
   protected async getEvents(): Promise<Array<z.infer<TEventUnion>>> {
@@ -78,7 +79,7 @@ export abstract class SingleStreamProjection<
     }
 
     const cachedEvents = await this.cachedEventsPromise;
-    return [...cachedEvents, ...this.appliedEvents];
+    return [...(cachedEvents ?? []), ...this.appliedEvents];
   }
 
   protected async reduceOnlyDbEvents<T>(
@@ -102,7 +103,7 @@ export abstract class SingleStreamProjection<
       }
     }
     const cachedEvents = await this.cachedEventsPromise;
-    return cachedEvents.reduce(reducer, defaultValue);
+    return (cachedEvents ?? []).reduce(reducer, defaultValue);
   }
 
   protected async reduceEvents<T>(

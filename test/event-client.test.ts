@@ -1,6 +1,11 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { createEventClient } from '../dist';
-import { eventUnion, eventInputUnion, eventTypes } from './example/events';
+import {
+  eventUnion,
+  eventInputUnion,
+  eventTypes,
+  UserEventInput,
+} from './example/events';
 import { db } from './example/db';
 import { ulid } from 'ulidx';
 import type { Knex } from 'knex';
@@ -26,6 +31,7 @@ describe('EventClient', () => {
         },
       };
 
+      // This should be a type error
       const savedEvent = await client.saveEvent(eventInput);
 
       expect(savedEvent).toMatchObject({
@@ -50,7 +56,9 @@ describe('EventClient', () => {
         },
       };
 
-      await expect(client.saveEvent(invalidEvent)).rejects.toThrow();
+      await expect(
+        client.saveEvent(invalidEvent as unknown as UserEventInput),
+      ).rejects.toThrow();
     });
   });
 

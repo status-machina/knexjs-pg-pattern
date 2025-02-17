@@ -3,12 +3,15 @@ import { Knex } from 'knex';
 import { EventInput } from './event-schema';
 import { DataFilter, operatorMap, QueryOperators } from './query-types';
 
-export type EventClient<TEventUnion extends z.ZodType> = {
+export type EventClient<
+  TEventUnion extends z.ZodType,
+  TEventInputUnion extends z.ZodType,
+> = {
   saveEvent: <T extends z.infer<TEventUnion>['type']>(
-    event: EventInput<Extract<z.infer<TEventUnion>, { type: T }>>,
+    event: z.infer<TEventInputUnion> & { type: T },
   ) => Promise<Extract<z.infer<TEventUnion>, { type: T }>>;
   saveEvents: <T extends z.infer<TEventUnion>['type']>(
-    events: Array<EventInput<Extract<z.infer<TEventUnion>, { type: T }>>>,
+    events: Array<z.infer<TEventInputUnion> & { type: T }>,
   ) => Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>>;
   getLatestEvent: <T extends z.infer<TEventUnion>['type']>(
     params: GetLatestEventParams<T>,
@@ -160,7 +163,7 @@ export const createEventClient = <
   eventUnion: TEventUnion,
   inputUnion: TEventInputUnion,
   knex: Knex,
-): EventClient<TEventUnion> => {
+): EventClient<TEventUnion, TEventInputUnion> => {
   return {
     saveEvent: async (event) => {
       // Validate the input
