@@ -1,6 +1,5 @@
 import { SingleStreamValidator } from '../../../src/validators';
 import { eventUnion, eventTypes, UserEvent } from '../events';
-import type { Projection } from '../../../src';
 import type { EventClient } from '../../../src';
 
 type CompletionStatus = 'complete' | 'incomplete' | undefined;
@@ -33,11 +32,10 @@ const toPresentInList = (status: boolean, event: UserEvent): boolean => {
 };
 
 export class MarkItemIncompleteValidator extends SingleStreamValidator<
-  typeof eventUnion,
-  Projection<string, unknown>
+  typeof eventUnion
 > {
   constructor(
-    eventClient: EventClient<typeof eventUnion, Projection<string, unknown>>,
+    eventClient: EventClient<typeof eventUnion>,
     listId: string,
     itemId: string,
   ) {

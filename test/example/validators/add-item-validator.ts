@@ -1,6 +1,5 @@
 import { SingleStreamValidator } from '../../../src/validators';
 import { eventUnion, eventTypes, UserEvent } from '../events';
-import type { Projection } from '../../../src';
 import type { EventClient } from '../../../src';
 
 const toIncompleteItemIdsInList = (
@@ -24,14 +23,8 @@ const toIncompleteItemIdsInList = (
   }
 };
 
-export class AddItemValidator extends SingleStreamValidator<
-  typeof eventUnion,
-  Projection<string, unknown>
-> {
-  constructor(
-    eventClient: EventClient<typeof eventUnion, Projection<string, unknown>>,
-    listId: string,
-  ) {
+export class AddItemValidator extends SingleStreamValidator<typeof eventUnion> {
+  constructor(eventClient: EventClient<typeof eventUnion>, listId: string) {
     super(
       eventClient,
       [
