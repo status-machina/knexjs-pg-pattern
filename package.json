@@ -1,6 +1,6 @@
 {
   "name": "@status-machina/knexjs-pg-pattern",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Event sourcing pattern for PostgreSQL in KnexJS",
   "repository": {
     "type": "git",
