@@ -9,6 +9,7 @@ export const ITEM_COMPLETION_SET = 'ITEM_COMPLETION_SET' as const;
 export const itemCompletionSetSchema = createEventSchema(
   ITEM_COMPLETION_SET,
   z.object({
+    tenantId: z.string(),
     listId: z.string(),
     itemId: z.string(),
     completed: z.boolean(),
@@ -18,6 +19,7 @@ export const itemCompletionSetSchema = createEventSchema(
 export const itemCompletionSetInputSchema = createEventInputSchema(
   ITEM_COMPLETION_SET,
   z.object({
+    tenantId: z.string(),
     listId: z.string(),
     itemId: z.string(),
     completed: z.boolean(),

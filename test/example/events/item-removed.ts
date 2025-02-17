@@ -9,6 +9,7 @@ export const ITEM_REMOVED = 'ITEM_REMOVED' as const;
 export const itemRemovedSchema = createEventSchema(
   ITEM_REMOVED,
   z.object({
+    tenantId: z.string(),
     listId: z.string(),
     itemId: z.string(),
   }),
@@ -17,6 +18,7 @@ export const itemRemovedSchema = createEventSchema(
 export const itemRemovedInputSchema = createEventInputSchema(
   ITEM_REMOVED,
   z.object({
+    tenantId: z.string(),
     listId: z.string(),
     itemId: z.string(),
   }),

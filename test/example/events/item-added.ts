@@ -9,6 +9,7 @@ export const ITEM_ADDED = 'ITEM_ADDED' as const;
 export const itemAddedSchema = createEventSchema(
   ITEM_ADDED,
   z.object({
+    tenantId: z.string(),
     listId: z.string(),
     itemId: z.string(),
     title: z.string(),
@@ -18,6 +19,7 @@ export const itemAddedSchema = createEventSchema(
 export const itemAddedInputSchema = createEventInputSchema(
   ITEM_ADDED,
   z.object({
+    tenantId: z.string(),
     listId: z.string(),
     itemId: z.string(),
     title: z.string(),

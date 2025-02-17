@@ -5,12 +5,13 @@ import { db } from '../db';
 import { ListProjection } from './list';
 import { ulid } from 'ulidx';
 
-describe('ListProjection', () => {
+describe.concurrent('ListProjection', () => {
   beforeEach(async () => {
     // No setup needed at this level
   });
 
   it('should handle list creation and item addition', async () => {
+    const tenantId = ulid();
     const listId = ulid();
     const itemId = ulid();
     const client = createEventClient(eventUnion, eventInputUnion, db);
@@ -18,6 +19,7 @@ describe('ListProjection', () => {
       {
         type: eventTypes.LIST_CREATED,
         data: {
+          tenantId,
           listId,
           name: 'Test List',
         },
@@ -25,6 +27,7 @@ describe('ListProjection', () => {
       {
         type: eventTypes.ITEM_ADDED,
         data: {
+          tenantId,
           listId,
           itemId,
           title: 'Test Item',
@@ -50,6 +53,7 @@ describe('ListProjection', () => {
   });
 
   it('should handle item completion', async () => {
+    const tenantId = ulid();
     const listId = ulid();
     const itemId = ulid();
     const client = createEventClient(eventUnion, eventInputUnion, db);
@@ -57,6 +61,7 @@ describe('ListProjection', () => {
       {
         type: eventTypes.LIST_CREATED,
         data: {
+          tenantId,
           listId,
           name: 'Test List',
         },
@@ -64,6 +69,7 @@ describe('ListProjection', () => {
       {
         type: eventTypes.ITEM_ADDED,
         data: {
+          tenantId,
           listId,
           itemId,
           title: 'Test Item',
@@ -72,6 +78,7 @@ describe('ListProjection', () => {
       {
         type: eventTypes.ITEM_COMPLETED,
         data: {
+          tenantId,
           listId,
           itemId,
         },
@@ -96,6 +103,7 @@ describe('ListProjection', () => {
   });
 
   it('should handle marking item as incomplete', async () => {
+    const tenantId = ulid();
     const listId = ulid();
     const itemId = ulid();
     const client = createEventClient(eventUnion, eventInputUnion, db);
@@ -103,6 +111,7 @@ describe('ListProjection', () => {
       {
         type: eventTypes.LIST_CREATED,
         data: {
+          tenantId,
           listId,
           name: 'Test List',
         },
@@ -110,6 +119,7 @@ describe('ListProjection', () => {
       {
         type: eventTypes.ITEM_ADDED,
         data: {
+          tenantId,
           listId,
           itemId,
           title: 'Test Item',
@@ -118,6 +128,7 @@ describe('ListProjection', () => {
       {
         type: eventTypes.ITEM_COMPLETED,
         data: {
+          tenantId,
           listId,
           itemId,
         },
@@ -125,6 +136,7 @@ describe('ListProjection', () => {
       {
         type: eventTypes.ITEM_MARKED_INCOMPLETE,
         data: {
+          tenantId,
           listId,
           itemId,
         },
@@ -149,6 +161,7 @@ describe('ListProjection', () => {
   });
 
   it('should handle item removal', async () => {
+    const tenantId = ulid();
     const listId = ulid();
     const itemId = ulid();
     const client = createEventClient(eventUnion, eventInputUnion, db);
@@ -156,6 +169,7 @@ describe('ListProjection', () => {
       {
         type: eventTypes.LIST_CREATED,
         data: {
+          tenantId,
           listId,
           name: 'Test List',
         },
@@ -163,6 +177,7 @@ describe('ListProjection', () => {
       {
         type: eventTypes.ITEM_ADDED,
         data: {
+          tenantId,
           listId,
           itemId,
           title: 'Test Item',
@@ -171,6 +186,7 @@ describe('ListProjection', () => {
       {
         type: eventTypes.ITEM_REMOVED,
         data: {
+          tenantId,
           listId,
           itemId,
         },
@@ -195,6 +211,7 @@ describe('ListProjection', () => {
   });
 
   it('should handle removing a completed item', async () => {
+    const tenantId = ulid();
     const listId = ulid();
     const itemId = ulid();
     const client = createEventClient(eventUnion, eventInputUnion, db);
@@ -202,6 +219,7 @@ describe('ListProjection', () => {
       {
         type: eventTypes.LIST_CREATED,
         data: {
+          tenantId,
           listId,
           name: 'Test List',
         },
@@ -209,6 +227,7 @@ describe('ListProjection', () => {
       {
         type: eventTypes.ITEM_ADDED,
         data: {
+          tenantId,
           listId,
           itemId,
           title: 'Test Item',
@@ -217,6 +236,7 @@ describe('ListProjection', () => {
       {
         type: eventTypes.ITEM_COMPLETED,
         data: {
+          tenantId,
           listId,
           itemId,
         },
@@ -224,6 +244,7 @@ describe('ListProjection', () => {
       {
         type: eventTypes.ITEM_REMOVED,
         data: {
+          tenantId,
           listId,
           itemId,
         },
@@ -247,8 +268,9 @@ describe('ListProjection', () => {
     });
   });
 
-  describe('with existing projection', () => {
+  describe.concurrent('with existing projection', () => {
     it('should load and use existing projection', async () => {
+      const tenantId = ulid();
       const listId = ulid();
       const itemId = ulid();
       const client = createEventClient(eventUnion, eventInputUnion, db);
@@ -256,6 +278,7 @@ describe('ListProjection', () => {
         {
           type: eventTypes.LIST_CREATED,
           data: {
+            tenantId,
             listId,
             name: 'Test List',
           },
@@ -263,6 +286,7 @@ describe('ListProjection', () => {
         {
           type: eventTypes.ITEM_ADDED,
           data: {
+            tenantId,
             listId,
             itemId,
             title: 'Test Item',
@@ -277,6 +301,7 @@ describe('ListProjection', () => {
       await client.saveEvent({
         type: eventTypes.ITEM_ADDED,
         data: {
+          tenantId,
           listId,
           itemId: newItemId,
           title: 'New Item',
@@ -307,6 +332,7 @@ describe('ListProjection', () => {
     });
 
     it('should only load events after the last event in projection', async () => {
+      const tenantId = ulid();
       const listId = ulid();
       const itemId = ulid();
       const client = createEventClient(eventUnion, eventInputUnion, db);
@@ -314,6 +340,7 @@ describe('ListProjection', () => {
         {
           type: eventTypes.LIST_CREATED,
           data: {
+            tenantId,
             listId,
             name: 'Test List',
           },
@@ -321,6 +348,7 @@ describe('ListProjection', () => {
         {
           type: eventTypes.ITEM_ADDED,
           data: {
+            tenantId,
             listId,
             itemId,
             title: 'Test Item',
@@ -335,6 +363,7 @@ describe('ListProjection', () => {
       await client.saveEvent({
         type: eventTypes.ITEM_ADDED,
         data: {
+          tenantId,
           listId,
           itemId: newItemId,
           title: 'New Item',
@@ -351,6 +380,7 @@ describe('ListProjection', () => {
       await client.saveEvent({
         type: eventTypes.ITEM_ADDED,
         data: {
+          tenantId,
           listId,
           itemId: newerItemId,
           title: 'Newer Item',

@@ -2,7 +2,7 @@ import '../dist';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { setupTestDatabase, teardownTestDatabase } from './setup';
 
-describe('Test', () => {
+describe.concurrent('Test', () => {
   beforeAll(async () => {
     await setupTestDatabase();
   });

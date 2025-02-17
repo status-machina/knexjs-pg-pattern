@@ -11,7 +11,7 @@ export type EventClient<
     event: z.infer<TEventInputUnion> & { type: T },
   ) => Promise<Extract<z.infer<TEventUnion>, { type: T }>>;
   saveEvents: <T extends z.infer<TEventUnion>['type']>(
-    events: Array<z.infer<TEventInputUnion> & { type: T }>,
+    events: (z.infer<TEventInputUnion> & { type: T })[],
   ) => Promise<Array<Extract<z.infer<TEventUnion>, { type: T }>>>;
   getLatestEvent: <T extends z.infer<TEventUnion>['type']>(
     params: GetLatestEventParams<T>,

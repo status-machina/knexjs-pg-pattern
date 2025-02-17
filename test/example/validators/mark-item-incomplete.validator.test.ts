@@ -6,18 +6,21 @@ import { MarkItemIncompleteValidator } from './mark-item-incomplete.validator';
 import { ulid } from 'ulidx';
 import type { Knex } from 'knex';
 
-describe('MarkItemIncompleteValidator', () => {
+describe.concurrent('MarkItemIncompleteValidator', () => {
   let knex: Knex;
-  let client: ReturnType<typeof createEventClient>;
+  let client: ReturnType<
+    typeof createEventClient<typeof eventUnion, typeof eventInputUnion>
+  >;
 
   beforeEach(async () => {
     knex = db;
     client = createEventClient(eventUnion, eventInputUnion, knex);
   });
 
-  describe('when marking a complete item as incomplete', () => {
+  describe.concurrent('when marking a complete item as incomplete', () => {
     it('should save the event', async () => {
       // Given a complete item
+      const tenantId = ulid();
       const listId = ulid();
       const itemId = ulid();
 
@@ -25,6 +28,7 @@ describe('MarkItemIncompleteValidator', () => {
         {
           type: eventTypes.ITEM_ADDED,
           data: {
+            tenantId,
             listId,
             itemId,
             title: 'Item 1',
@@ -33,6 +37,7 @@ describe('MarkItemIncompleteValidator', () => {
         {
           type: eventTypes.ITEM_COMPLETED,
           data: {
+            tenantId,
             listId,
             itemId,
           },
@@ -44,6 +49,7 @@ describe('MarkItemIncompleteValidator', () => {
       const event = {
         type: eventTypes.ITEM_MARKED_INCOMPLETE,
         data: {
+          tenantId,
           listId,
           itemId,
         },
@@ -58,9 +64,10 @@ describe('MarkItemIncompleteValidator', () => {
     });
   });
 
-  describe('when marking an incomplete item as incomplete', () => {
+  describe.concurrent('when marking an incomplete item as incomplete', () => {
     it('should throw an error', async () => {
       // Given an incomplete item
+      const tenantId = ulid();
       const listId = ulid();
       const itemId = ulid();
 
@@ -68,6 +75,7 @@ describe('MarkItemIncompleteValidator', () => {
         {
           type: eventTypes.ITEM_ADDED,
           data: {
+            tenantId,
             listId,
             itemId,
             title: 'Item 1',
@@ -80,6 +88,7 @@ describe('MarkItemIncompleteValidator', () => {
       const event = {
         type: eventTypes.ITEM_MARKED_INCOMPLETE,
         data: {
+          tenantId,
           listId,
           itemId,
         },
@@ -99,9 +108,10 @@ describe('MarkItemIncompleteValidator', () => {
     });
   });
 
-  describe('when marking an unknown item as incomplete', () => {
+  describe.concurrent('when marking an unknown item as incomplete', () => {
     it('should throw an error', async () => {
       // When attempting to mark an unknown item as incomplete
+      const tenantId = ulid();
       const listId = ulid();
       const itemId = ulid();
 
@@ -109,6 +119,7 @@ describe('MarkItemIncompleteValidator', () => {
       const event = {
         type: eventTypes.ITEM_MARKED_INCOMPLETE,
         data: {
+          tenantId,
           listId,
           itemId,
         },
@@ -130,9 +141,10 @@ describe('MarkItemIncompleteValidator', () => {
     });
   });
 
-  describe('when marking a removed item as incomplete', () => {
+  describe.concurrent('when marking a removed item as incomplete', () => {
     it('should throw an error', async () => {
       // Given an item that was added and then removed
+      const tenantId = ulid();
       const listId = ulid();
       const itemId = ulid();
 
@@ -140,6 +152,7 @@ describe('MarkItemIncompleteValidator', () => {
         {
           type: eventTypes.ITEM_ADDED,
           data: {
+            tenantId,
             listId,
             itemId,
             title: 'Item 1',
@@ -148,6 +161,7 @@ describe('MarkItemIncompleteValidator', () => {
         {
           type: eventTypes.ITEM_REMOVED,
           data: {
+            tenantId,
             listId,
             itemId,
           },
@@ -159,6 +173,7 @@ describe('MarkItemIncompleteValidator', () => {
       const event = {
         type: eventTypes.ITEM_MARKED_INCOMPLETE,
         data: {
+          tenantId,
           listId,
           itemId,
         },

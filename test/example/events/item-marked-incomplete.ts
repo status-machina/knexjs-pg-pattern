@@ -9,6 +9,7 @@ export const ITEM_MARKED_INCOMPLETE = 'ITEM_MARKED_INCOMPLETE' as const;
 export const itemMarkedIncompleteSchema = createEventSchema(
   ITEM_MARKED_INCOMPLETE,
   z.object({
+    tenantId: z.string(),
     listId: z.string(),
     itemId: z.string(),
   }),
@@ -17,6 +18,7 @@ export const itemMarkedIncompleteSchema = createEventSchema(
 export const itemMarkedIncompleteInputSchema = createEventInputSchema(
   ITEM_MARKED_INCOMPLETE,
   z.object({
+    tenantId: z.string(),
     listId: z.string(),
     itemId: z.string(),
   }),

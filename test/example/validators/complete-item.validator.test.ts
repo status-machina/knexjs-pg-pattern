@@ -6,18 +6,21 @@ import { CompleteItemValidator } from './complete-item.validator';
 import { ulid } from 'ulidx';
 import type { Knex } from 'knex';
 
-describe('CompleteItemValidator', () => {
+describe.concurrent('CompleteItemValidator', () => {
   let knex: Knex;
-  let client: ReturnType<typeof createEventClient>;
+  let client: ReturnType<
+    typeof createEventClient<typeof eventUnion, typeof eventInputUnion>
+  >;
 
   beforeEach(async () => {
     knex = db;
     client = createEventClient(eventUnion, eventInputUnion, knex);
   });
 
-  describe('when completing an item that exists in the list', () => {
+  describe.concurrent('when completing an item that exists in the list', () => {
     it('should save the event', async () => {
       // Given an item in the list
+      const tenantId = ulid();
       const listId = ulid();
       const itemId = ulid();
 
@@ -25,6 +28,7 @@ describe('CompleteItemValidator', () => {
         {
           type: eventTypes.ITEM_ADDED,
           data: {
+            tenantId,
             listId,
             itemId,
             title: 'Item 1',
@@ -37,6 +41,7 @@ describe('CompleteItemValidator', () => {
       const event = {
         type: eventTypes.ITEM_COMPLETED,
         data: {
+          tenantId,
           listId,
           itemId,
         },
@@ -51,9 +56,10 @@ describe('CompleteItemValidator', () => {
     });
   });
 
-  describe('when completing an already complete item', () => {
+  describe.concurrent('when completing an already complete item', () => {
     it('should throw an error', async () => {
       // Given a complete item
+      const tenantId = ulid();
       const listId = ulid();
       const itemId = ulid();
 
@@ -61,6 +67,7 @@ describe('CompleteItemValidator', () => {
         {
           type: eventTypes.ITEM_ADDED,
           data: {
+            tenantId,
             listId,
             itemId,
             title: 'Item 1',
@@ -69,6 +76,7 @@ describe('CompleteItemValidator', () => {
         {
           type: eventTypes.ITEM_COMPLETED,
           data: {
+            tenantId,
             listId,
             itemId,
           },
@@ -80,6 +88,7 @@ describe('CompleteItemValidator', () => {
       const event = {
         type: eventTypes.ITEM_COMPLETED,
         data: {
+          tenantId,
           listId,
           itemId,
         },
@@ -99,9 +108,10 @@ describe('CompleteItemValidator', () => {
     });
   });
 
-  describe('when completing an unknown item', () => {
+  describe.concurrent('when completing an unknown item', () => {
     it('should throw an error', async () => {
       // When attempting to complete an unknown item
+      const tenantId = ulid();
       const listId = ulid();
       const itemId = ulid();
 
@@ -109,6 +119,7 @@ describe('CompleteItemValidator', () => {
       const event = {
         type: eventTypes.ITEM_COMPLETED,
         data: {
+          tenantId,
           listId,
           itemId,
         },
@@ -130,9 +141,10 @@ describe('CompleteItemValidator', () => {
     });
   });
 
-  describe('when completing a removed item', () => {
+  describe.concurrent('when completing a removed item', () => {
     it('should throw an error', async () => {
       // Given an item that was added and then removed
+      const tenantId = ulid();
       const listId = ulid();
       const itemId = ulid();
 
@@ -140,6 +152,7 @@ describe('CompleteItemValidator', () => {
         {
           type: eventTypes.ITEM_ADDED,
           data: {
+            tenantId,
             listId,
             itemId,
             title: 'Item 1',
@@ -148,6 +161,7 @@ describe('CompleteItemValidator', () => {
         {
           type: eventTypes.ITEM_REMOVED,
           data: {
+            tenantId,
             listId,
             itemId,
           },
@@ -159,6 +173,7 @@ describe('CompleteItemValidator', () => {
       const event = {
         type: eventTypes.ITEM_COMPLETED,
         data: {
+          tenantId,
           listId,
           itemId,
         },

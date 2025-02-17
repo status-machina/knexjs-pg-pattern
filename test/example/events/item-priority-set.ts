@@ -9,6 +9,7 @@ export const ITEM_PRIORITY_SET = 'ITEM_PRIORITY_SET' as const;
 export const itemPrioritySetSchema = createEventSchema(
   ITEM_PRIORITY_SET,
   z.object({
+    tenantId: z.string(),
     listId: z.string(),
     itemId: z.string(),
     priority: z.number(),
@@ -18,6 +19,7 @@ export const itemPrioritySetSchema = createEventSchema(
 export const itemPrioritySetInputSchema = createEventInputSchema(
   ITEM_PRIORITY_SET,
   z.object({
+    tenantId: z.string(),
     listId: z.string(),
     itemId: z.string(),
     priority: z.number(),

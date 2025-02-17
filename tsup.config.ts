@@ -8,4 +8,5 @@ export default defineConfig({
   sourcemap: true,
   clean: true,
   target: 'es2020',
+  tsconfig: 'tsconfig.build.json',
 });
