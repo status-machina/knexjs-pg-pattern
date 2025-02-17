@@ -2,6 +2,10 @@
   "name": "@status-machina/knexjs-pg-pattern",
   "version": "0.0.1",
   "description": "Event sourcing pattern for PostgreSQL in KnexJS",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/status-machina/knexjs-pg-pattern.git"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "publishConfig": {
@@ -9,6 +13,7 @@
   },
   "scripts": {
     "build": "tsup",
+    "prepublishOnly": "npm run test",
     "test": "fun() { npm run build && npm run test:setup && vitest --run --pool=threads --no-isolate \"$@\" && npm run test:teardown; }; fun",
     "test:watch": "fun() { npm run build && npm run test:setup && vitest --pool=threads --no-isolate \"$@\" && npm run test:teardown; }; fun",
     "test:coverage": "fun() { npm run build && npm run test:setup && TEST_COVERAGE=true vitest --run --pool=threads --no-isolate --coverage \"$@\" && npm run test:teardown; }; fun",
