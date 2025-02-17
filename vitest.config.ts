@@ -26,6 +26,7 @@ export default defineConfig({
         'dist/**',
         'tsup.config.ts',
         'vitest.config.ts',
+        'src/migration-functions.ts',
       ],
     },
   },

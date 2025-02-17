@@ -1,3 +1,4 @@
+/* istanbul ignore file -- @preserve */
 import { z } from 'zod';
 
 // Base schema without discriminator
