@@ -4,24 +4,21 @@ import {
   createEventInputSchema,
 } from '@status-machina/knexjs-pg-pattern';
 
+const itemRemovedData = z.object({
+  tenantId: z.string(),
+  listId: z.string(),
+  itemId: z.string(),
+});
+
 export const ITEM_REMOVED = 'ITEM_REMOVED' as const;
 
 export const itemRemovedSchema = createEventSchema(
   ITEM_REMOVED,
-  z.object({
-    tenantId: z.string(),
-    listId: z.string(),
-    itemId: z.string(),
-  }),
+  itemRemovedData,
 );
-
 export const itemRemovedInputSchema = createEventInputSchema(
   ITEM_REMOVED,
-  z.object({
-    tenantId: z.string(),
-    listId: z.string(),
-    itemId: z.string(),
-  }),
+  itemRemovedData,
 );
 
 export type ItemRemovedEvent = z.infer<typeof itemRemovedSchema>;

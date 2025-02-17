@@ -600,12 +600,12 @@ describe.concurrent('EventClient', () => {
       const client = createEventClient(eventUnion, eventInputUnion, knex);
       const testId = ulid();
 
-      type InvalidOperator = { invalid_op: string };
       await expect(
         client.getEventStream({
           types: [eventTypes.LIST_CREATED],
           filter: {
-            tenantId: { invalid_op: testId } as unknown as InvalidOperator,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            tenantId: { invalid_op: testId } as any,
           },
         }),
       ).rejects.toThrow('Unknown operator: invalid_op');
@@ -1049,7 +1049,7 @@ describe.concurrent('EventClient', () => {
       const client = createEventClient(eventUnion, eventInputUnion, knex);
       const testId = ulid();
 
-      type InvalidEvent = { type: string; data: { tenantId: string } };
+      // This is an invalid event type, and it should be rejected
       await expect(
         client.saveEvents([
           {
@@ -1057,7 +1057,7 @@ describe.concurrent('EventClient', () => {
             data: {
               tenantId: testId,
             },
-          } as InvalidEvent,
+          } as unknown as UserEventInput,
         ]),
       ).rejects.toThrow();
     });
@@ -1066,10 +1066,7 @@ describe.concurrent('EventClient', () => {
       const client = createEventClient(eventUnion, eventInputUnion, knex);
       const testId = ulid();
 
-      type InvalidExampleEvent = {
-        type: typeof eventTypes.EXAMPLE_EVENT;
-        data: { tenantId: string };
-      };
+      // This is an invalid event data structure, and it should be rejected
       await expect(
         client.saveEvents([
           {
@@ -1077,7 +1074,7 @@ describe.concurrent('EventClient', () => {
             data: {
               tenantId: testId,
             },
-          } as InvalidExampleEvent,
+          } as unknown as UserEventInput,
         ]),
       ).rejects.toThrow();
     });

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { eventTypes, UserEvent } from '../events';
+import { eventTypes, UserEvent, UserEventInput } from '../events';
 import {
   SingleStreamProjection,
   EventClient,
