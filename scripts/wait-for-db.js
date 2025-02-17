@@ -1,3 +1,4 @@
+/* v8 ignore file */
 const { Client } = require('pg');
 const { setTimeout } = require('timers/promises');
 

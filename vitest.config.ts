@@ -6,7 +6,19 @@ export default defineConfig({
       '@status-machina/knexjs-pg-pattern': './dist',
     },
     typecheck: {
-      tsconfig: './tsconfig.test.json',
+      tsconfig: './tsconfig.json',
+    },
+    coverage: {
+      provider: 'istanbul',
+      exclude: [
+        'knexfile.ts',
+        'migrations/**',
+        'scripts/**',
+        'dist/**',
+        'tsup.config.ts',
+        'vitest.config.ts',
+      ],
+      include: ['src/**/*.ts'],
     },
   },
 });

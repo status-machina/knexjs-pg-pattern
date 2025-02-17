@@ -282,21 +282,26 @@ export const createEventClient = <
         });
     },
 
+    /**
+     * Updates a projection only if its latest_event_id is less than the supplied eventId.
+     * This ensures that newer versions of the projection are not overwritten by older events.
+     *
+     * @throws {Error} If the projection's latest_event_id is greater than or equal to the supplied eventId
+     */
     conditionalUpdateProjection: async (params) => {
       const result = await knex('projections')
-        .insert({
+        .where({
           type: params.type,
           id: params.id,
+        })
+        .whereRaw('CAST(latest_event_id AS BIGINT) < ?', [
+          params.eventId.toString(),
+        ])
+        .update({
           data: params.data,
           latest_event_id: params.eventId.toString(),
+          updated_at: knex.fn.now(),
         })
-        .onConflict(['type', 'id'])
-        .merge()
-        .where(
-          knex.raw('projections.latest_event_id < ?', [
-            params.eventId.toString(),
-          ]),
-        )
         .returning('id');
 
       if (!result?.length) {

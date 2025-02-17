@@ -1,3 +1,4 @@
+/* v8 ignore file */
 // These migrations are only used for testing
 import type { Knex } from 'knex';
 import {

@@ -1,3 +1,4 @@
+/* v8 ignore file */
 // This is the KnexJS configuration file for the project tests
 import type { Knex } from 'knex';
 
